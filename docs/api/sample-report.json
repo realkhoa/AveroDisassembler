@@ -1,0 +1,297 @@
+{
+  "schema_id": "avero.report/v1",
+  "tool": {
+    "name": "avero",
+    "version": "0.5.0",
+    "ir_version": "avero.ir/v1"
+  },
+  "generated_at": "2026-11-12T04:55:18Z",
+  "artifact": {
+    "ir_version": "avero.ir/v1",
+    "id": "34e0af96df1949bf0c36f8fd7cfe9416bd645edc576a088ee8b31d52a7dd3f69",
+    "path": "tests/fixtures/sample.apk",
+    "size": 1167,
+    "kinds": [
+      "apk"
+    ],
+    "hashes": {
+      "md5": "0344778b77c272fe80762e2426e31786",
+      "sha1": "f9f0d91d1a2738e09ae2ee703dda7d647acf2996",
+      "sha256": "34e0af96df1949bf0c36f8fd7cfe9416bd645edc576a088ee8b31d52a7dd3f69"
+    },
+    "entropy": 7.321397,
+    "sections": [],
+    "imports": [],
+    "exports": [],
+    "strings": [
+      {
+        "offset": 30,
+        "value": "AndroidManifest.xml",
+        "encoding": "ascii"
+      },
+      {
+        "offset": 878,
+        "value": "QnYG~*!",
+        "encoding": "ascii"
+      },
+      {
+        "offset": 966,
+        "value": "resources.arsc",
+        "encoding": "ascii"
+      },
+      {
+        "offset": 1066,
+        "value": "AndroidManifest.xmlPK",
+        "encoding": "ascii"
+      },
+      {
+        "offset": 1131,
+        "value": "resources.arscPK",
+        "encoding": "ascii"
+      }
+    ],
+    "metadata": {
+      "apk_debuggable": true,
+      "apk_dex_count": 0,
+      "apk_entries": 2,
+      "apk_min_sdk": 24,
+      "apk_native_abis": [],
+      "apk_package": "com.avero.testsample",
+      "apk_signed_v1": false,
+      "apk_signed_v2_v3": false,
+      "apk_target_sdk": 34,
+      "apk_version_code": 7,
+      "apk_version_name": "1.2.3",
+      "zip_apk_sig_block": false,
+      "zip_compression_ratio": 2.908,
+      "zip_dex_count": 0,
+      "zip_entries": 2,
+      "zip_has_android_manifest": true,
+      "zip_has_resources_arsc": true,
+      "zip_native_abis": [],
+      "zip_signed_v1": false
+    },
+    "evidence": [
+      {
+        "id": "a093bc43556c6833",
+        "producer": {
+          "engine": "avero.probe",
+          "version": "0.5.0"
+        },
+        "kind": "metadata",
+        "locator": {
+          "zip_entries": 2
+        },
+        "excerpt": "ZIP container with 2 entries (manifest=true, dex=0)",
+        "confidence": 1.0
+      },
+      {
+        "id": "915e9dbf10aef43c",
+        "producer": {
+          "engine": "avero.probe",
+          "version": "0.5.0"
+        },
+        "kind": "heuristic",
+        "locator": {
+          "entropy": 7.321397,
+          "size": 1167
+        },
+        "excerpt": "size=1167 entropy=7.3214 kinds=apk",
+        "confidence": 1.0
+      },
+      {
+        "id": "a093bc43556c6833",
+        "producer": {
+          "engine": "avero.probe",
+          "version": "0.5.0"
+        },
+        "kind": "metadata",
+        "locator": {
+          "zip_entries": 2
+        },
+        "excerpt": "ZIP container with 2 entries (manifest=true, dex=0)",
+        "confidence": 1.0
+      },
+      {
+        "id": "915e9dbf10aef43c",
+        "producer": {
+          "engine": "avero.probe",
+          "version": "0.5.0"
+        },
+        "kind": "heuristic",
+        "locator": {
+          "entropy": 7.321397,
+          "size": 1167
+        },
+        "excerpt": "size=1167 entropy=7.3214 kinds=apk",
+        "confidence": 1.0
+      },
+      {
+        "id": "876660acc8f179af",
+        "producer": {
+          "engine": "avero.apk",
+          "version": "0.5.0"
+        },
+        "kind": "metadata",
+        "locator": {
+          "min_sdk": 24,
+          "package": "com.avero.testsample",
+          "target_sdk": 34,
+          "version_code": 7
+        },
+        "excerpt": "package=com.avero.testsample versionCode=7 minSdk=24 targetSdk=34 permissions=3 components=4",
+        "confidence": 1.0
+      },
+      {
+        "id": "46f9401ca5f87e1d",
+        "producer": {
+          "engine": "avero.apk",
+          "version": "0.5.0"
+        },
+        "kind": "metadata",
+        "locator": {
+          "dex": 0,
+          "entries": 2
+        },
+        "excerpt": "APK with 2 entries, 0 dex, ABIs=, v1_sig=false, v2_sig=false",
+        "confidence": 1.0
+      }
+    ]
+  },
+  "findings": [
+    {
+      "id": "F-b7b79e949227",
+      "severity": "high",
+      "category": "android",
+      "title": "APK debuggable=true",
+      "detail": "Manifest enables android:debuggable=\"true\" — allows a debugger to attach to the process, usually absent from official releases and a sign of a test build/re-pack.",
+      "evidence_ids": [
+        "876660acc8f179af"
+      ],
+      "confidence": 0.9,
+      "remediation": "Disable debuggable before release."
+    },
+    {
+      "id": "F-004d1f0a775c",
+      "severity": "medium",
+      "category": "android",
+      "title": "2 exported component(s) without permission",
+      "detail": "Components with exported=true but no android:permission declared: activity:.MainActivity, receiver:.BootReceiver. Other apps can call them directly — review intent handling.",
+      "evidence_ids": [
+        "876660acc8f179af"
+      ],
+      "confidence": 0.7
+    },
+    {
+      "id": "F-d1a60084619f",
+      "severity": "medium",
+      "category": "android",
+      "title": "APK is not signed (no v1/v2/v3 signature found)",
+      "detail": "No META-INF signature or APK Signing Block found. An unsigned APK cannot be installed on a real device (unless bypassed) and may have been re-packed.",
+      "evidence_ids": [
+        "46f9401ca5f87e1d"
+      ],
+      "confidence": 0.8
+    },
+    {
+      "id": "F-78ce0ae23565",
+      "severity": "low",
+      "category": "android",
+      "title": "Dangerous permissions (2)",
+      "detail": "APK requests sensitive permissions: android.permission.CAMERA, android.permission.READ_SMS. Cross-check against the app's actual functionality.",
+      "evidence_ids": [
+        "876660acc8f179af"
+      ],
+      "confidence": 0.8
+    }
+  ],
+  "facts": {
+    "apk.structure": {
+      "apk_allow_backup": false,
+      "apk_component_count": 4,
+      "apk_components": [
+        {
+          "exported": true,
+          "kind": "activity",
+          "name": ".MainActivity",
+          "permission": null
+        },
+        {
+          "exported": false,
+          "kind": "service",
+          "name": ".SyncService",
+          "permission": "com.avero.permission.SYNC"
+        },
+        {
+          "exported": true,
+          "kind": "receiver",
+          "name": ".BootReceiver",
+          "permission": null
+        },
+        {
+          "exported": false,
+          "kind": "provider",
+          "name": ".DataProvider",
+          "permission": null
+        }
+      ],
+      "apk_dangerous_permissions": [
+        "android.permission.CAMERA",
+        "android.permission.READ_SMS"
+      ],
+      "apk_debuggable": true,
+      "apk_exported_components": [
+        "activity:.MainActivity",
+        "receiver:.BootReceiver"
+      ],
+      "apk_min_sdk": 24,
+      "apk_package": "com.avero.testsample",
+      "apk_permissions": [
+        "android.permission.INTERNET",
+        "android.permission.CAMERA",
+        "android.permission.READ_SMS"
+      ],
+      "apk_target_sdk": 34,
+      "apk_version_code": 7,
+      "apk_version_name": "1.2.3",
+      "assets_count": 0,
+      "compression_ratio": 2.908,
+      "dex_count": 0,
+      "dex_files": [],
+      "entries": 2,
+      "has_android_manifest": true,
+      "has_resources_arsc": true,
+      "manifest_parsed": true,
+      "native_abis": [],
+      "resources_count": 0,
+      "signing_v1": false,
+      "signing_v2_or_v3": false
+    },
+    "heuristics.generic": {
+      "base64_blob_count": 0,
+      "domains": [],
+      "ipv4": [],
+      "suspicious_command_strings": [],
+      "urls": []
+    },
+    "signatures.rules": {
+      "matched_rules": []
+    },
+    "strings.generic": {
+      "ascii_count": 5,
+      "count": 5,
+      "min_length": 6,
+      "scanned_bytes": 1167,
+      "truncated": false,
+      "utf16le_count": 0
+    }
+  },
+  "coverage": {
+    "apk.structure": "ok",
+    "heuristics.generic": "ok",
+    "signatures.rules": "ok",
+    "strings.generic": "ok"
+  },
+  "unknowns": [],
+  "warnings": []
+}

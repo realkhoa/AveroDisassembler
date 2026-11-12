@@ -1,0 +1,942 @@
+openapi: 3.1.0
+info:
+  title: Avero API
+  version: "1.0.0"
+  description: |
+    Local REST/SSE API for the AveroDisassembler workbench.
+    The server binds to 127.0.0.1 only and serves static analysis results produced by the
+    Rust core. It never executes the analyzed artifact.
+
+    Contract version: `avero.api/v1`. Report payloads use schema `avero.report/v1`
+    (see `docs/api/sample-report.json`).
+servers:
+  - url: http://127.0.0.1:8787
+    description: Local API (default)
+tags:
+  - name: health
+  - name: scans
+  - name: jobs
+  - name: reports
+  - name: engines
+  - name: diffs
+
+paths:
+  /api/health:
+    get:
+      tags: [health]
+      summary: API and core version status
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Health"
+
+  /api/scans:
+    post:
+      tags: [scans]
+      summary: Upload an artifact and start a scan
+      description: Requires an explicit user action in the UI. The artifact is processed locally.
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required: [file]
+              properties:
+                file:
+                  type: string
+                  format: binary
+                options:
+                  type: string
+                  description: JSON-encoded ScanOptions (min_string_len, max_strings, only, skip)
+      responses:
+        "202":
+          description: Scan accepted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/JobAccepted"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "413":
+          description: Artifact too large
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorEnvelope"
+
+  /api/jobs/{jobId}:
+    get:
+      tags: [jobs]
+      summary: Get job status
+      parameters:
+        - $ref: "#/components/parameters/JobId"
+      responses:
+        "200":
+          description: Job state
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Job"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  /api/jobs/{jobId}/events:
+    get:
+      tags: [jobs]
+      summary: Job progress stream (Server-Sent Events)
+      parameters:
+        - $ref: "#/components/parameters/JobId"
+      responses:
+        "200":
+          description: SSE stream; closes after `done` or `error`
+          content:
+            text/event-stream:
+              schema:
+                type: string
+                description: |
+                  Each `data:` line is a JobEvent JSON object:
+                  {type:"progress", job_id, stage, percent, message} |
+                  {type:"done", job_id, report_id} |
+                  {type:"error", job_id, error:{code,message,details}}
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  /api/reports/{reportId}:
+    get:
+      tags: [reports]
+      summary: Full report (avero.report/v1)
+      parameters:
+        - $ref: "#/components/parameters/ReportId"
+      responses:
+        "200":
+          description: Report document
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Report"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  /api/reports/{reportId}/findings:
+    get:
+      tags: [reports]
+      summary: Paginated findings
+      parameters:
+        - $ref: "#/components/parameters/ReportId"
+        - name: severity
+          in: query
+          schema:
+            type: string
+            enum: [critical, high, medium, low, info]
+        - name: category
+          in: query
+          schema:
+            type: string
+        - name: q
+          in: query
+          description: Case-insensitive title/detail search
+          schema:
+            type: string
+        - name: min_confidence
+          in: query
+          schema:
+            type: number
+            minimum: 0
+            maximum: 1
+        - $ref: "#/components/parameters/Cursor"
+        - $ref: "#/components/parameters/Limit"
+      responses:
+        "200":
+          description: Findings page
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/FindingsPage"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  /api/reports/{reportId}/evidence/{evidenceId}:
+    get:
+      tags: [reports]
+      summary: Single evidence record
+      parameters:
+        - $ref: "#/components/parameters/ReportId"
+        - name: evidenceId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Evidence
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Evidence"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  /api/reports/{reportId}/sections:
+    get:
+      tags: [reports]
+      summary: Sections
+      parameters:
+        - $ref: "#/components/parameters/ReportId"
+      responses:
+        "200":
+          description: Sections
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  items:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/Section"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  /api/reports/{reportId}/imports:
+    get:
+      tags: [reports]
+      summary: Imports
+      parameters:
+        - $ref: "#/components/parameters/ReportId"
+      responses:
+        "200":
+          description: Imports
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  items:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/Import"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  /api/reports/{reportId}/exports:
+    get:
+      tags: [reports]
+      summary: Exports
+      parameters:
+        - $ref: "#/components/parameters/ReportId"
+      responses:
+        "200":
+          description: Exports
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  items:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/Export"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  /api/reports/{reportId}/strings:
+    get:
+      tags: [reports]
+      summary: Paginated strings
+      parameters:
+        - $ref: "#/components/parameters/ReportId"
+        - name: offset
+          in: query
+          description: Zero-based item offset (alternative to cursor)
+          schema:
+            type: integer
+            minimum: 0
+        - $ref: "#/components/parameters/Cursor"
+        - $ref: "#/components/parameters/Limit"
+        - name: q
+          in: query
+          schema:
+            type: string
+        - name: encoding
+          in: query
+          schema:
+            type: string
+            enum: [ascii, utf16le]
+      responses:
+        "200":
+          description: Strings page
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StringsPage"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  /api/reports/{reportId}/hex:
+    get:
+      tags: [reports]
+      summary: Hex slice of the original artifact
+      description: Requires the server to have access to the original artifact bytes.
+      parameters:
+        - $ref: "#/components/parameters/ReportId"
+        - name: offset
+          in: query
+          required: true
+          schema:
+            type: integer
+            minimum: 0
+        - name: length
+          in: query
+          required: true
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 65536
+      responses:
+        "200":
+          description: Hex slice (base64 encoded)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HexSlice"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "410":
+          description: Artifact bytes are no longer available
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorEnvelope"
+
+  /api/reports/{reportId}/disassembly:
+    get:
+      tags: [reports]
+      summary: Paged disassembly (M4)
+      description: Returns 501 until the disassembly backend is implemented.
+      parameters:
+        - $ref: "#/components/parameters/ReportId"
+        - name: start
+          in: query
+          schema:
+            type: integer
+            minimum: 0
+        - $ref: "#/components/parameters/Limit"
+      responses:
+        "200":
+          description: Disassembly page
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DisassemblyPage"
+        "501":
+          description: Not implemented yet
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorEnvelope"
+
+  /api/reports/{reportId}/decompile:
+    post:
+      tags: [reports]
+      summary: Decompile an assembly or type with a sidecar engine
+      parameters:
+        - $ref: "#/components/parameters/ReportId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                type:
+                  type: string
+                  description: Fully qualified type name; omit to decompile the whole assembly
+                engine:
+                  type: string
+                  default: ilspycmd
+      responses:
+        "202":
+          description: Decompile accepted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/JobAccepted"
+        "409":
+          description: Engine not installed
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorEnvelope"
+
+  /api/reports/{reportId}/apk-manifest:
+    get:
+      tags: [reports]
+      summary: Parsed AndroidManifest facts
+      parameters:
+        - $ref: "#/components/parameters/ReportId"
+      responses:
+        "200":
+          description: Manifest facts
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApkManifest"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  /api/reports/{reportId}/dotnet:
+    get:
+      tags: [reports]
+      summary: .NET metadata facts
+      parameters:
+        - $ref: "#/components/parameters/ReportId"
+      responses:
+        "200":
+          description: .NET facts
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DotnetFacts"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  /api/diffs:
+    post:
+      tags: [diffs]
+      summary: Compare two existing reports (M4)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [old_report, new_report]
+              properties:
+                old_report:
+                  type: string
+                new_report:
+                  type: string
+      responses:
+        "200":
+          description: Diff result
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+        "501":
+          description: Not implemented yet
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorEnvelope"
+
+  /api/engines:
+    get:
+      tags: [engines]
+      summary: Installed and available engine packs
+      responses:
+        "200":
+          description: Engine list
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  items:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/Engine"
+
+  /api/engines/{engineId}/install:
+    post:
+      tags: [engines]
+      summary: Install an engine pack (explicit confirmation required in the UI)
+      parameters:
+        - name: engineId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "202":
+          description: Installation accepted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/JobAccepted"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+
+components:
+  parameters:
+    ReportId:
+      name: reportId
+      in: path
+      required: true
+      description: Artifact SHA-256 (lowercase hex)
+      schema:
+        type: string
+        pattern: "^[a-f0-9]{64}$"
+    JobId:
+      name: jobId
+      in: path
+      required: true
+      schema:
+        type: string
+    Cursor:
+      name: cursor
+      in: query
+      description: Opaque pagination cursor from a previous page
+      schema:
+        type: string
+    Limit:
+      name: limit
+      in: query
+      schema:
+        type: integer
+        minimum: 1
+        maximum: 1000
+        default: 100
+
+  responses:
+    BadRequest:
+      description: Invalid request
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorEnvelope"
+    NotFound:
+      description: Not found
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorEnvelope"
+
+  schemas:
+    Health:
+      type: object
+      required: [status, core_version, api_version]
+      properties:
+        status:
+          type: string
+          enum: [ok]
+        core_version:
+          type: string
+          example: 0.5.0
+        api_version:
+          type: string
+          example: avero.api/v1
+        engines:
+          type: object
+          additionalProperties:
+            type: boolean
+
+    Error:
+      type: object
+      required: [code, message]
+      properties:
+        code:
+          type: string
+          example: not_found
+        message:
+          type: string
+        details:
+          type: object
+          additionalProperties: true
+
+    ErrorEnvelope:
+      type: object
+      required: [error]
+      properties:
+        error:
+          $ref: "#/components/schemas/Error"
+
+    JobAccepted:
+      type: object
+      required: [job_id]
+      properties:
+        job_id:
+          type: string
+        status:
+          type: string
+          enum: [queued]
+
+    Job:
+      type: object
+      required: [id, status]
+      properties:
+        id:
+          type: string
+        status:
+          type: string
+          enum: [queued, running, done, failed, cancelled]
+        stage:
+          type: string
+        percent:
+          type: number
+          minimum: 0
+          maximum: 100
+        error:
+          $ref: "#/components/schemas/Error"
+        result:
+          type: object
+          additionalProperties: true
+
+    Producer:
+      type: object
+      required: [engine, version]
+      properties:
+        engine:
+          type: string
+        version:
+          type: string
+        command:
+          type: [string, "null"]
+
+    Evidence:
+      type: object
+      required: [id, producer, kind, locator, confidence]
+      properties:
+        id:
+          type: string
+        producer:
+          $ref: "#/components/schemas/Producer"
+        kind:
+          type: string
+          enum: [header, section, instruction, string, metadata, rule, command, heuristic]
+        locator:
+          type: object
+          additionalProperties: true
+        excerpt:
+          type: [string, "null"]
+        confidence:
+          type: number
+        limitations:
+          type: array
+          items:
+            type: string
+
+    Finding:
+      type: object
+      required: [id, severity, category, title, detail, confidence]
+      properties:
+        id:
+          type: string
+        severity:
+          type: string
+          enum: [critical, high, medium, low, info]
+        category:
+          type: string
+        title:
+          type: string
+        detail:
+          type: string
+        evidence_ids:
+          type: array
+          items:
+            type: string
+        confidence:
+          type: number
+        remediation:
+          type: [string, "null"]
+
+    Section:
+      type: object
+      required: [name, va, vsize, raw_offset, raw_size, entropy]
+      properties:
+        name:
+          type: string
+        va:
+          type: integer
+        vsize:
+          type: integer
+        raw_offset:
+          type: integer
+        raw_size:
+          type: integer
+        entropy:
+          type: number
+        flags:
+          type: array
+          items:
+            type: string
+
+    Import:
+      type: object
+      required: [library]
+      properties:
+        library:
+          type: string
+        name:
+          type: [string, "null"]
+        ordinal:
+          type: [integer, "null"]
+        iat_rva:
+          type: [integer, "null"]
+
+    Export:
+      type: object
+      properties:
+        name:
+          type: [string, "null"]
+        ordinal:
+          type: [integer, "null"]
+        rva:
+          type: [integer, "null"]
+        forwarder:
+          type: [string, "null"]
+
+    StringEntry:
+      type: object
+      required: [offset, value, encoding]
+      properties:
+        offset:
+          type: integer
+        value:
+          type: string
+        encoding:
+          type: string
+          enum: [ascii, utf16le]
+        section:
+          type: [string, "null"]
+
+    Artifact:
+      type: object
+      required: [id, size, kinds, hashes, entropy]
+      properties:
+        ir_version:
+          type: string
+        id:
+          type: string
+        path:
+          type: [string, "null"]
+        size:
+          type: integer
+        kinds:
+          type: array
+          items:
+            type: string
+        hashes:
+          type: object
+          additionalProperties:
+            type: string
+        entropy:
+          type: number
+        architecture:
+          type: [string, "null"]
+        bits:
+          type: [integer, "null"]
+        endianness:
+          type: [string, "null"]
+        sections:
+          type: array
+          items:
+            $ref: "#/components/schemas/Section"
+        imports:
+          type: array
+          items:
+            $ref: "#/components/schemas/Import"
+        exports:
+          type: array
+          items:
+            $ref: "#/components/schemas/Export"
+        strings:
+          type: array
+          items:
+            $ref: "#/components/schemas/StringEntry"
+        metadata:
+          type: object
+          additionalProperties: true
+        evidence:
+          type: array
+          items:
+            $ref: "#/components/schemas/Evidence"
+
+    Report:
+      type: object
+      required: [schema_id, tool, generated_at, artifact, findings]
+      properties:
+        schema_id:
+          type: string
+          enum: [avero.report/v1]
+        tool:
+          type: object
+          additionalProperties: true
+        generated_at:
+          type: string
+          format: date-time
+        artifact:
+          $ref: "#/components/schemas/Artifact"
+        findings:
+          type: array
+          items:
+            $ref: "#/components/schemas/Finding"
+        facts:
+          type: object
+          additionalProperties: true
+        coverage:
+          type: object
+          additionalProperties:
+            type: string
+        unknowns:
+          type: array
+          items:
+            type: string
+        warnings:
+          type: array
+          items:
+            type: string
+
+    PageMeta:
+      type: object
+      properties:
+        next_cursor:
+          type: [string, "null"]
+        total:
+          type: [integer, "null"]
+
+    FindingsPage:
+      allOf:
+        - $ref: "#/components/schemas/PageMeta"
+        - type: object
+          properties:
+            items:
+              type: array
+              items:
+                $ref: "#/components/schemas/Finding"
+
+    StringsPage:
+      allOf:
+        - $ref: "#/components/schemas/PageMeta"
+        - type: object
+          properties:
+            items:
+              type: array
+              items:
+                $ref: "#/components/schemas/StringEntry"
+
+    Instruction:
+      type: object
+      required: [address, mnemonic]
+      properties:
+        address:
+          type: integer
+        bytes_hex:
+          type: string
+        mnemonic:
+          type: string
+        operands:
+          type: string
+        size:
+          type: integer
+
+    DisassemblyPage:
+      allOf:
+        - $ref: "#/components/schemas/PageMeta"
+        - type: object
+          properties:
+            items:
+              type: array
+              items:
+                $ref: "#/components/schemas/Instruction"
+
+    HexSlice:
+      type: object
+      required: [offset, length, bytes_base64]
+      properties:
+        offset:
+          type: integer
+        length:
+          type: integer
+        bytes_base64:
+          type: string
+
+    ApkManifest:
+      type: object
+      properties:
+        package:
+          type: [string, "null"]
+        version_code:
+          type: [integer, "null"]
+        version_name:
+          type: [string, "null"]
+        min_sdk:
+          type: [integer, "null"]
+        target_sdk:
+          type: [integer, "null"]
+        debuggable:
+          type: boolean
+        allow_backup:
+          type: [boolean, "null"]
+        permissions:
+          type: array
+          items:
+            type: string
+        dangerous_permissions:
+          type: array
+          items:
+            type: string
+        components:
+          type: array
+          items:
+            type: object
+            properties:
+              kind:
+                type: string
+              name:
+                type: string
+              exported:
+                type: [boolean, "null"]
+              permission:
+                type: [string, "null"]
+
+    DotnetFacts:
+      type: object
+      properties:
+        runtime_version:
+          type: string
+        clr_runtime_version:
+          type: string
+        module_name:
+          type: string
+        type_count:
+          type: integer
+        method_count:
+          type: integer
+        field_count:
+          type: integer
+        assembly_ref_count:
+          type: integer
+        type_names_sample:
+          type: array
+          items:
+            type: string
+        obfuscation:
+          type: object
+          additionalProperties: true
+
+    Engine:
+      type: object
+      required: [id, version, installed]
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        version:
+          type: string
+        license:
+          type: string
+        integration:
+          type: string
+        installed:
+          type: boolean
+        binary:
+          type: [string, "null"]
+        homepage:
+          type: [string, "null"]

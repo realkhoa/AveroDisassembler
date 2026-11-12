@@ -7,6 +7,7 @@
 | **Toolchain** | rustc 1.94.1 MSVC, VS 18 Community, Windows 11 26200 |
 | **Binary** | `target/release/avero.exe` — **3.36 MB**, no runtime dependency |
 | **Tests** | **54 passing** (35 unit + 7 CLI + 4 format + 4 analyzer + 4 APK manifest) |
+| **UI** | **Not built in this repository** — specified for separate UI agents in [UI-SPEC.md](UI-SPEC.md); API contract in [docs/api/](api/README.md) |
 | **Related docs** | [Design](AVERO-DISASSEMBLER-DESIGN.md) · [Research](RE-RESEARCH-REPORT.md) · [Signatures](SIGNATURES.md) · [Engines](ENGINES.md) |
 
 ---
@@ -81,12 +82,17 @@ bzip2/uImage/Android boot/UBI/ChromeOS/UEFI), WASM, Python `.pyc`, scripts.
 | `signatures.rules` | Native YARA-subset engine + 12 default rules — see [SIGNATURES.md](SIGNATURES.md) |
 | `heuristics.generic` | URLs/domains/IPs, shell command strings, base64 blobs, whole-file entropy, unknown kinds |
 
-### Reports
+### Reports and UI
 
 - `report.json` — `avero.report/v1`, deterministic (content-addressed evidence IDs, BTreeMap ordering).
 - `report.md`, `report.html` — single-file HTML, dark theme, auto-escaped (XSS test included).
 - Findings always reference evidence; reports include `coverage` and `unknowns`.
 - Cache in `.avero/cache/<sha1>.json`; disable with `--no-cache`.
+- **UI**: delegated to separate UI agents. The full specification is
+  [UI-SPEC.md](UI-SPEC.md); the REST/SSE contract is
+  [`avero.api/v1`](api/openapi.yaml) with a real sample report at
+  [`docs/api/sample-report.json`](api/sample-report.json). The core team will implement
+  `avero serve` (API mode) and keeps the contract stable; no UI code lives in this goal.
 
 ### Engine packs and decompilation
 
@@ -187,6 +193,12 @@ Adding an analyzer:
 
 1. **Ghidra headless adapter** + `avero decompile <file> --function 0x...` (P2).
 2. **IL2CPP metadata dump** (types/methods/strings) + Cpp2IL adapter.
-3. **APK resources.arsc** + signing certificate parsing.
-4. **Workbench UI** (Next.js: report viewer, hex, disassembly) — P4; **MCP server** — P5.
-5. **Cross-platform CI matrix** (Linux/macOS builds) and code signing.
+3. **APK `resources.arsc`** + signing-certificate parsing.
+4. **`avero serve`** — implement the REST/SSE API in [docs/api/openapi.yaml](api/openapi.yaml)
+   so the UI agents can switch from file mode to API mode; keep `avero.api/v1` stable.
+5. **MCP server** (bounded tools with evidence) — P5.
+6. **Cross-platform CI matrix** (Linux/macOS builds) and code signing.
+
+Out of scope for this goal: the workbench UI itself. UI agents own `apps/web` (or a separate
+repository) and implement [UI-SPEC.md](UI-SPEC.md); this repository only provides the
+contract, sample data and the API that it needs.

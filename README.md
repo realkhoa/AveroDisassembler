@@ -12,6 +12,11 @@ firmware containers, scripts and WASM. Includes a **native signature engine** (Y
 subset), an **engine installer** (ILSpyCmd, rizin, Ghidra, jadx) and
 **`avero dotnet decompile`**. Every report is JSON/Markdown/HTML with verifiable evidence.
 
+**UI is specified but not built here** — it is owned by separate UI agents. The complete
+specification (screens, flows, data contracts, design system, milestones, acceptance
+criteria) is in [docs/UI-SPEC.md](docs/UI-SPEC.md), with the API contract in
+[docs/api/](docs/api/README.md).
+
 ## Why Rust?
 
 The first prototype was written in Python and worked, but startup took ~450 ms, scanning
@@ -121,6 +126,8 @@ flows through `Fragment` → `Report`.
 | Document | Contents |
 |---|---|
 | [Implementation status](docs/IMPLEMENTATION-STATUS.md) | What works, benchmarks, limitations, next steps |
+| [UI specification](docs/UI-SPEC.md) | Screens, workflows, data contracts, design system, milestones and acceptance criteria for the UI agents |
+| [API contract](docs/api/README.md) | `avero.api/v1` OpenAPI spec and sample `avero.report/v1` payload |
 | [Engine packs](docs/ENGINES.md) | Installer, manifests, SHA-256 pinning, offline bundles, ILSpyCmd decompile |
 | [Signature engine](docs/SIGNATURES.md) | Rule syntax, default ruleset, how to add rules |
 | [Research report](docs/RE-RESEARCH-REPORT.md) | Survey of 112 open-source RE projects (2026-11-12 snapshot), licenses, market gaps, roadmap |
