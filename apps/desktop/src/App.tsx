@@ -1,6 +1,7 @@
 /** Avero desktop workbench (Tauri + Vite + React). */
 
 import React, { useCallback, useEffect, useRef, useState } from "react";
+import { invoke } from "@tauri-apps/api/core";
 import * as api from "./api";
 import type {
   DiffResult,
@@ -148,7 +149,7 @@ function HomeView({
         <p className="muted" style={{ margin: 0 }}>
           {mode === "FILE"
             ? "Open an avero.report/v1 JSON report (offline) or attach the original artifact for hex inspection."
-            : "Scan artifacts through the local avero serve daemon with live progress."}
+            : "The Avero core is bundled into this app: scan artifacts locally with live progress."}
         </p>
       </div>
 
@@ -198,7 +199,7 @@ function HomeView({
         <div className="grid">
           <div className="card">
             <div className="flex-between">
-              <h2 className="section-title">Scan artifact with avero serve</h2>
+              <h2 className="section-title">Scan artifact (embedded core)</h2>
               <span className={`api-badge ${health ? "ok" : "bad"}`}>
                 <span className="dot" />
                 {health ? `API ${health.core_version}` : "API offline"}
@@ -270,7 +271,7 @@ function HomeView({
                 Open
               </button>
             </div>
-            <p className="muted small mt">Reports stay in the daemon cache after a scan.</p>
+            <p className="muted small mt">Reports stay in the embedded core cache after a scan.</p>
           </div>
         </div>
       )}
@@ -1114,7 +1115,7 @@ function EnginesView({ apiUrl, health }: { apiUrl: string; health: Health | null
           </tbody>
         </table>
       </div>
-      <div className="alert info">In file mode, manage engines from the CLI: <span className="mono">avero engine list | install &lt;id&gt; | doctor</span></div>
+      <div className="alert info">Engines are installed into the app-data directory from this screen. The embedded core manages downloads and SHA-256 verification.</div>
     </div>
   );
 }
@@ -1152,14 +1153,14 @@ function SettingsView({
             <p className="muted small">Open report.json files and original artifacts locally.</p>
           </button>
           <button className={`card ${mode === "API" ? "active" : ""}`} style={{ textAlign: "left", cursor: "pointer", borderColor: mode === "API" ? "var(--accent)" : "var(--border)" }} onClick={() => setMode("API")}>
-            <strong>API mode (local daemon)</strong>
-            <p className="muted small">Scan artifacts via avero serve: REST + SSE, engines, decompile.</p>
+            <strong>API mode (embedded core)</strong>
+            <p className="muted small">Scan artifacts with the embedded Avero core: REST + SSE, engines, decompile.</p>
           </button>
         </div>
       </div>
 
       <div className="card">
-        <h2 className="section-title">Local API endpoint</h2>
+        <h2 className="section-title">Embedded core endpoint</h2>
         <div className="row">
           <input className="input mono" value={draftUrl} onChange={(event) => setDraftUrl(event.target.value)} style={{ flex: 1 }} />
           <button className="button" onClick={() => { setApiUrl(draftUrl); setSaved(true); setTimeout(() => setSaved(false), 1500); }}>{saved ? "Saved" : "Save"}</button>
@@ -1172,7 +1173,7 @@ function SettingsView({
             <span className="text-critical">{apiError || "not connected"}</span>
           )}
         </div>
-        <p className="muted small mt">Start the daemon with: <span className="mono">avero serve --port 8787</span></p>
+        <p className="muted small mt">The Avero core (REST + SSE) is bundled with this app — there is no separate server to start.</p>
       </div>
 
       <div className="card">
@@ -1197,9 +1198,10 @@ function SettingsView({
 /* ------------------------------------------------------------------ */
 
 export default function App() {
-  const [mode, setMode] = useState<Mode>(() => (localStorage.getItem(MODE_KEY) as Mode) || "FILE");
+  const [mode, setMode] = useState<Mode>(() => (localStorage.getItem(MODE_KEY) as Mode) || "API");
   const [apiUrl, setApiUrlState] = useState<string>(api.getApiUrl());
   const [health, setHealth] = useState<Health | null>(null);
+  const [embeddedCore, setEmbeddedCore] = useState(false);
   const [apiError, setApiError] = useState<string | null>(null);
   const [report, setReport] = useState<Report | null>(null);
   const [artifactBytes, setArtifactBytes] = useState<Uint8Array | null>(null);
@@ -1220,6 +1222,38 @@ export default function App() {
       .then((value) => { setHealth(value); setApiError(null); })
       .catch((healthError: unknown) => { setHealth(null); setApiError(healthError instanceof Error ? healthError.message : "API unreachable"); });
   }, [mode, apiUrl]);
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const base = await invoke<string>("api_base_url");
+        if (cancelled) return;
+        api.setApiUrl(base);
+        setApiUrlState(base);
+        setEmbeddedCore(true);
+        if (!window.localStorage.getItem(MODE_KEY)) setMode("API");
+        // The embedded server starts on a background thread; retry briefly until ready.
+        for (let attempt = 0; attempt < 30 && !cancelled; attempt += 1) {
+          try {
+            const value = await api.health(base);
+            if (!cancelled) {
+              setHealth(value);
+              setApiError(null);
+            }
+            break;
+          } catch {
+            await new Promise((resolve) => setTimeout(resolve, 200));
+          }
+        }
+      } catch {
+        // Running in a plain browser (no Tauri): keep the configured URL / file mode.
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   useEffect(() => {
     refreshHealth();
@@ -1313,7 +1347,7 @@ export default function App() {
   const setModeSafe = (next: Mode) => {
     setMode(next);
     setError(null);
-    setNotice(next === "API" ? "API mode: make sure avero serve is running on the configured endpoint." : null);
+    setNotice(next === "API" ? "API mode: the Avero core is bundled in this app and is already running." : null);
     setTimeout(() => setNotice(null), 4000);
   };
 
@@ -1363,6 +1397,7 @@ export default function App() {
             </span>
           )}
           <span className="mode-badge">{mode} MODE</span>
+          {embeddedCore && <span className="api-badge ok"><span className="dot" />CORE EMBEDDED</span>}
           <button className="icon-btn" onClick={() => setTab("engines")} title="Engines">▤</button>
           <button className="icon-btn" onClick={() => setTab("settings")} title="Settings">⚙</button>
         </div>
@@ -1371,15 +1406,19 @@ export default function App() {
       <div className="body">
         <aside className="sidebar">
           <div className="nav-label">Navigation</div>
-          <button className={`nav-item ${tab === "home" ? "active" : ""}`} onClick={() => setTab("home")}>Home</button>
+          <button className={
+`av-item ${tab === "home" ? "active" : ""}`} onClick={() => setTab("home")}>Home</button>
           {report && reportTabs.filter((item) => item.show).map((item) => (
-            <button key={item.id} className={`nav-item ${tab === item.id ? "active" : ""}`} onClick={() => setTab(item.id)}>
+            <button key={item.id} className={
+`av-item ${tab === item.id ? "active" : ""}`} onClick={() => setTab(item.id)}>
               <span>{item.label}</span>
             </button>
           ))}
           <div className="nav-label mt">Tools</div>
-          <button className={`nav-item ${tab === "engines" ? "active" : ""}`} onClick={() => setTab("engines")}>Engine packs</button>
-          <button className={`nav-item ${tab === "settings" ? "active" : ""}`} onClick={() => setTab("settings")}>Settings</button>
+          <button className={
+`av-item ${tab === "engines" ? "active" : ""}`} onClick={() => setTab("engines")}>Engine packs</button>
+          <button className={
+`av-item ${tab === "settings" ? "active" : ""}`} onClick={() => setTab("settings")}>Settings</button>
           {report && (
             <div className="sidebar-footer">
               <div>Format: <span className="mono">{report.artifact.kinds.join(", ") || "raw"}</span></div>

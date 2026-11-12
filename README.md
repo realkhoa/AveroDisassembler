@@ -6,7 +6,7 @@
 [![Release](https://img.shields.io/github/v/release/realkhoa/AveroDisassembler?sort=semver)](https://github.com/realkhoa/AveroDisassembler/releases)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
-**Status: v0.14.0 — Rust core + local API + engines + APK/IL2CPP + report diff + web workbench + Tauri desktop app** (P0/P1/P2/P3/P4). Static triage and
+**Status: v0.15.0 — Rust core + local API + engines + APK/IL2CPP + report diff + web workbench + self-contained Tauri desktop app (core bundled, no server)** (P0/P1/P2/P3/P4). Static triage and
 analysis for PE, .NET, ELF, Mach-O, APK (including the **binary AndroidManifest.xml**), Unity
 IL2CPP, Godot PCK, firmware containers, scripts and WASM. Includes a **native signature
 engine** (YARA subset), an **engine installer** (ILSpyCmd, rizin, Ghidra, jadx),

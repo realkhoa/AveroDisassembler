@@ -10,6 +10,9 @@ importers:
 
   apps/desktop:
     dependencies:
+      '@tauri-apps/api':
+        specifier: ^2.9.0
+        version: 2.12.4
       react:
         specifier: ^19.0.0
         version: 19.3.1
@@ -778,6 +781,9 @@ packages:
 
   '@tanstack/virtual-core@3.19.11':
     resolution: {integrity: sha512-/5iHb0RHBvj8Di59FDs4ESNm45jls33aZAi4zccVXZjc/6ZvwQP6nzEYeT6weXjTf9E6/vrp2JhYWRyO+ZP13A==}
+
+  '@tauri-apps/api@2.12.4':
+    resolution: {integrity: sha512-pVmfis+4zT8H0Qhp3xPZx9Ju7kpzvA6rr/PSJPyuwfvucTQ8sVt61NYU9KMkK703UFlYadFmjKA4HhybOtN0gg==}
 
   '@tauri-apps/cli-darwin-arm64@2.12.4':
     resolution: {integrity: sha512-OxqKSckIkoJ6vX2AjifIJpTasFC0Hbdoo7gEiCmAjauABO3U8m2MRsLWe+QTiBwDx1mIrvgA+rvI7tvDnbnHVg==}
@@ -2257,6 +2263,8 @@ snapshots:
       react-dom: 19.3.1(react@19.3.1)
 
   '@tanstack/virtual-core@3.19.11': {}
+
+  '@tauri-apps/api@2.12.4': {}
 
   '@tauri-apps/cli-darwin-arm64@2.12.4':
     optional: true

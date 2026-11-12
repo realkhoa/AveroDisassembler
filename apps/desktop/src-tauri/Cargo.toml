@@ -1,7 +1,7 @@
 [package]
 name = "avero-desktop"
-version = "0.14.0"
-description = "AveroDisassembler desktop workbench"
+version = "0.15.0"
+description = "AveroDisassembler desktop workbench (embedded core)"
 edition = "2021"
 rust-version = "1.77"
 
@@ -14,6 +14,7 @@ tauri-build = { version = "2", features = [] }
 
 [dependencies]
 tauri = { version = "2", features = [] }
+avero = { path = "../../.." }
 
 [profile.release]
 codegen-units = 1

@@ -1,13 +1,15 @@
 # Avero Desktop Workbench (`apps/desktop`)
 
-Desktop shell for AveroDisassembler: **Tauri 2 + Vite 5 + React 19 + TypeScript strict**, no Node
-runtime required in the packaged app (static assets bundled by Tauri; WebView2 on Windows).
+Desktop shell for AveroDisassembler: **Tauri 2 + Vite 5 + React 19 + TypeScript strict**.
+The **Avero core (Rust)** is linked into the executable and its REST/SSE API runs on a
+background thread inside the app process — no Node runtime and **no separate server to run**
+(WebView2 on Windows).
 
 ## Features
 
 - **File mode (offline)** — open an `avero.report/v1` `report.json`, attach the original
   artifact for hex inspection, recent-report cache in `localStorage`.
-- **API mode** — talks to the local `avero serve` daemon (`avero.api/v1`):
+- **API mode (default)** — talks to the **embedded core API** (`avero.api/v1`) started automatically:
   health badge, artifact scan with SSE progress, report fetch by id, paged string search,
   hex slices, rizin disassembly, ILSpyCmd/Ghidra decompile jobs with SSE progress,
   engine list/install, report diff and APK/.NET/signature facts.
@@ -21,7 +23,7 @@ runtime required in the packaged app (static assets bundled by Tauri; WebView2 o
 - Rust stable + MSVC build tools (Windows) / `libwebkit2gtk` (Linux, if built there)
 - Node 20+ and pnpm
 - WebView2 runtime (preinstalled on Windows 11)
-- `avero serve` running on `http://127.0.0.1:8787` for API mode
+- no external server required (the core is bundled). Optional: an external `avero serve` can be used via Settings for development.
 
 ## Development
 
@@ -41,14 +43,15 @@ cmd /c "call \"C:\Program Files\Microsoft Visual Studio\18\Community\VC\Auxiliar
 
 The executable is written to `src-tauri/target/release/avero-desktop.exe`.
 
-## API mode
+## Embedded core
 
-```powershell
-target\release\avero.exe serve --port 8787
-```
+The app links the `avero` core crate and starts its loopback REST/SSE API on a random free port
+at launch (the UI receives the URL through the `api_base_url` Tauri command). The core
+working directory is the per-user app-data directory (`%APPDATA%\\com.avero.workbench`),
+which also holds seeded engine manifests and installed engines — no Program Files writes.
 
-The daemon allows CORS for the Tauri webview origins (`tauri://localhost`,
-`http://tauri.localhost`) in addition to the localhost dev UI.
+Health, scans, decompile and engine install all flow through this embedded API. An external
+`avero serve` remains supported via Settings for browser/CLI development.
 
 ## Structure
 

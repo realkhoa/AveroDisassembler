@@ -1,9 +1,9 @@
-# Implementation status — v0.14.0 (native Rust core + web workbench + Tauri desktop app)
+# Implementation status — v0.15.0 (native Rust core + web workbench + self-contained Tauri desktop app)
 
 | | |
 |---|---|
 | **Date** | 2026-11-12 |
-| **Version** | 0.14.0 (Rust core + desktop) |
+| **Version** | 0.15.0 (Rust core + desktop) |
 | **Toolchain** | rustc 1.94.1 MSVC, VS 18 Community, Windows 11 26200 |
 | **Binary** | `target/release/avero.exe` — **4.12 MB**, no runtime dependency |
 | **Tests** | **74 passing** (54 unit + 7 CLI + 4 format + 4 analyzer + 5 APK manifest) |

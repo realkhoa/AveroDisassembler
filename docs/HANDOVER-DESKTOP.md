@@ -2,9 +2,10 @@
 
 - **Location:** `apps/desktop`
 - **Stack:** Tauri 2.12 + Vite 5 + React 19 + TypeScript strict
-- **Contracts:** `avero.report/v1` (files), `avero.api/v1` (local daemon)
-- **Status:** M1–M4 feature parity with the web workbench for the core screens (see below);
-  built as a standalone Windows executable via `tauri build --no-bundle`.
+- **Contracts:** `avero.report/v1` (files), `avero.api/v1` (embedded core API)
+- **Status:** M1–M4 feature parity with the web workbench for the core screens.
+  The **Avero core is bundled in-process** (no external server) and the app is built as a
+  standalone Windows executable via `tauri build --no-bundle`.
 
 ## Why a separate desktop app
 
@@ -24,12 +25,12 @@ src-tauri/      Tauri Rust shell, window config, CSP, icons
 ```
 
 State model: `mode` (FILE/API), active `report`, optional `artifactBytes` (file mode hex),
-tab routing in component state, recent reports + reports in `localStorage`.
+tab routing in component state, recent reports + reports in `localStorage`.\n\nOn startup the Rust side (`src-tauri/src/lib.rs`) seeds engine manifests into the app-data\ndirectory, sets it as the working directory and spawns `avero::server::run` on a random\nloopback port. The frontend calls the `api_base_url` Tauri command and defaults to API mode;\nthere is no manual server step.
 
 Data modes:
 
 - **FILE** — `<input type=file>` for `report.json`; optional artifact bytes for hex.
-- **API** — `avero serve` REST calls; scans use multipart upload + SSE; jobs for decompile
+- **API** — embedded core REST calls; scans use multipart upload + SSE; jobs for decompile
   and engine install reuse the same SSE subscription helper.
 
 ## Endpoints used
@@ -41,9 +42,9 @@ Data modes:
 
 ## CORS
 
-The core `avero serve` now echoes CORS origins for desktop WebView origins
-(`tauri://localhost`, `http://tauri.localhost`, `https://tauri.localhost`) in addition to
-configured/localhost origins, so the Tauri app can call the loopback API out of the box.
+The core API echoes CORS origins for desktop WebView origins (`tauri://localhost`,
+`http://tauri.localhost`, `https://tauri.localhost`) plus configured/localhost origins, so the
+embedded webview can call its own loopback API.
 
 ## Build & smoke test
 
@@ -56,9 +57,7 @@ cmd /c "call \"C:\Program Files\Microsoft Visual Studio\18\Community\VC\Auxiliar
 src-tauri\target\release\avero-desktop.exe
 ```
 
-Smoke test: open a `report.json`, inspect Overview/Findings/Hex; start
-`avero serve --port 8787`, switch Settings to API mode, scan an artifact and verify SSE
-progress + report, engines and disassembly.
+Smoke test: launch the exe **without** any external server; the header must show\n`API READY` + `CORE EMBEDDED`; open a `report.json` (file mode) or scan an artifact (API mode)\nand verify report/engines/disassembly.
 
 ## Verified in this session
 
@@ -71,5 +70,5 @@ progress + report, engines and disassembly.
 
 - Ship installers: set `bundle.targets` to `nsis`/`msi` and sign the binaries.
 - Add a Tauri CI job (Windows) and attach the desktop artifact to releases.
-- Optional native commands: auto-start/stop `avero serve`, native file dialogs, tray icon.
+- Optional native commands: native file dialogs, tray icon, engine selection.
 - Reuse web E2E patterns for desktop via Tauri WebDriver (tauri-driver).
