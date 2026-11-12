@@ -1,6 +1,6 @@
 # Avero Desktop Workbench (`apps/desktop`)
 
-Desktop shell for AveroDisassembler: **Tauri 2 + Vite + React 19 + TypeScript strict**, no Node
+Desktop shell for AveroDisassembler: **Tauri 2 + Vite 5 + React 19 + TypeScript strict**, no Node
 runtime required in the packaged app (static assets bundled by Tauri; WebView2 on Windows).
 
 ## Features

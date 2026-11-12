@@ -1,7 +1,7 @@
 # Desktop workbench handover (Tauri)
 
 - **Location:** `apps/desktop`
-- **Stack:** Tauri 2.12 + Vite 6 + React 19 + TypeScript strict
+- **Stack:** Tauri 2.12 + Vite 5 + React 19 + TypeScript strict
 - **Contracts:** `avero.report/v1` (files), `avero.api/v1` (local daemon)
 - **Status:** M1–M4 feature parity with the web workbench for the core screens (see below);
   built as a standalone Windows executable via `tauri build --no-bundle`.
