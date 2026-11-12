@@ -1,4 +1,4 @@
-# Third-party licenses
+﻿# Third-party licenses
 
 | | |
 |---|---|
@@ -139,6 +139,8 @@ The Rust binary only uses permissive crates; there is no GPL/AGPL in its depende
 | `colored` | **MPL-2.0** | Console colors — weak, file-level copyleft; used unmodified as a dependency with notice |
 | `hex` | MIT / Apache-2.0 | Hex encoding |
 | `tempfile` (dev) | MIT / Apache-2.0 | Test fixtures |
+
+| `x509-parser` | MIT / Apache-2.0 | APK signing certificates (v2/v3/v3.1 X.509 parsing) |
 
 Recommendation: run `cargo deny check licenses` (or `cargo-license`) in CI before release.
 If an absolutely permissive license set is required, replace `colored` with hand-written

@@ -901,6 +901,18 @@ components:
                 type: [boolean, "null"]
               permission:
                 type: [string, "null"]
+        signature_schemes:
+          type: array
+          items:
+            type: string
+        signers:
+          type: array
+          items:
+            type: object
+            additionalProperties: true
+        resources:
+          type: [object, "null"]
+          additionalProperties: true
 
     DotnetFacts:
       type: object

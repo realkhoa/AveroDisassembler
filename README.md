@@ -6,13 +6,15 @@
 [![Release](https://img.shields.io/github/v/release/realkhoa/AveroDisassembler?sort=semver)](https://github.com/realkhoa/AveroDisassembler/releases)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
-**Status: v0.8.0 — Rust core + local API + Ghidra decompile + rizin disassembly** (P0/P1/P2). Static triage and
+**Status: v0.9.0 — Rust core + local API + Ghidra decompile + rizin disassembly + APK signatures/resources** (P0/P1/P2/P3). Static triage and
 analysis for PE, .NET, ELF, Mach-O, APK (including the **binary AndroidManifest.xml**), Unity
 IL2CPP, Godot PCK, firmware containers, scripts and WASM. Includes a **native signature
 engine** (YARA subset), an **engine installer** (ILSpyCmd, rizin, Ghidra, jadx),
 **`avero dotnet decompile`**, **native decompilation via Ghidra headless**
 (`avero decompile`), **rizin disassembly** (`avero disasm`) and a **local REST/SSE API**
 (`avero serve`) for the workbench UI.
+APK analysis also parses **X.509 signing certificates** (v1/v2/v3 schemes) and **\esources.arsc\** string resources.
+
 Every report is JSON/Markdown/HTML with verifiable evidence.
 
 **UI is specified but not built here** — it is owned by separate UI agents. The complete
@@ -27,14 +29,14 @@ The first prototype was written in Python and worked, but startup took ~450 ms, 
 venv. The Rust rewrite is a single 3.4 MB executable that scans the same file in ~111 ms
 (cold) / ~20 ms (warm), with no runtime to install.
 
-| Task | Python prototype | Rust 0.2 | **Rust 0.7** | Speed-up |
+| Task | Python prototype | Rust 0.2 | **Rust 0.9** | Speed-up |
 |---|---|---|---|---|
 | `scan notepad.exe` (352 KB, cold) | 1,980 ms | 100 ms | **111 ms** | ~18× |
 | `scan notepad.exe` (warm) | 1,070 ms | 18 ms | **20 ms** | ~53× |
 | `scan APK` (with AXML parsing) | — | — | **38 ms** | — |
 | CLI startup | ~450 ms | 13 ms | **11 ms** | ~40× |
-| Distribution | venv + Python (~100 MB) | 2.74 MB | **3.79 MB** | — |
-| Tests | 40 (pytest) | 38 | **63** | — |
+| Distribution | venv + Python (~100 MB) | 2.74 MB | **4.07 MB** | — |
+| Tests | 40 (pytest) | 38 | **70** | — |
 
 > Measurements include ~10–13 ms of PowerShell process overhead; the binary itself is faster.
 
@@ -50,6 +52,7 @@ target\release\avero.exe scan sample.apk --out .\reports --json
 target\release\avero.exe apk sample.apk
 target\release\avero.exe probe sample.elf --json
 target\release\avero.exe strings blob.bin -n 8
+target\release\avero.exe apk sample-signed.apk
 
 # Engines + decompilation
 target\release\avero.exe engine install ilspycmd

@@ -1,4 +1,4 @@
-﻿//! Local REST/SSE API (`avero.api/v1`) implementing `docs/api/openapi.yaml`.
+//! Local REST/SSE API (`avero.api/v1`) implementing `docs/api/openapi.yaml`.
 //!
 //! Design constraints:
 //! - loopback only, no authentication (local single-user tool);
@@ -490,6 +490,9 @@ fn handle_apk_manifest(state: &AppState, report_id: &str) -> ApiResult {
             "permissions": facts.get("apk_permissions").cloned().unwrap_or_else(|| json!([])),
             "dangerous_permissions": facts.get("apk_dangerous_permissions").cloned().unwrap_or_else(|| json!([])),
             "components": facts.get("apk_components").cloned().unwrap_or_else(|| json!([])),
+            "signature_schemes": facts.get("apk_signature_schemes").cloned().unwrap_or_else(|| json!([])),
+            "signers": facts.get("apk_signers").cloned().unwrap_or_else(|| json!([])),
+            "resources": facts.get("apk_resources").cloned().unwrap_or(Value::Null),
         }),
     )
 }

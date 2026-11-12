@@ -6,6 +6,8 @@ use avero::probe::probe_bytes;
 
 const APK: &[u8] = include_bytes!("fixtures/sample.apk");
 const MANIFEST: &[u8] = include_bytes!("fixtures/AndroidManifest.bin");
+const SIGNED_APK: &[u8] = include_bytes!("fixtures/sample-signed.apk");
+const RES_APK: &[u8] = include_bytes!("fixtures/sample-res.apk");
 
 fn scan_apk() -> avero::ir::Report {
     let mut artifact = probe_bytes(APK, None);
@@ -62,6 +64,55 @@ fn apk_analyzer_parses_binary_manifest() {
         .findings
         .iter()
         .any(|finding| finding.title.contains("exported component")));
+}
+
+#[test]
+fn apk_signature_and_resources_are_parsed() {
+    let mut artifact = probe_bytes(SIGNED_APK, None);
+    let report = analyze(
+        &mut artifact,
+        SIGNED_APK,
+        &ScanOptions {
+            use_cache: false,
+            ..ScanOptions::default()
+        },
+    );
+    let facts = &report.facts["apk.structure"];
+    let schemes = facts["apk_signature_schemes"]
+        .as_array()
+        .expect("signature schemes");
+    assert!(schemes.iter().any(|value| value == "v2"));
+    assert!(schemes.iter().any(|value| value == "v3"));
+    let signers = facts["apk_signers"].as_array().expect("signers");
+    assert_eq!(signers.len(), 1, "certificates are deduplicated");
+    assert!(signers[0]["subject"]
+        .as_str()
+        .unwrap_or("")
+        .contains("Avero Test Cert"));
+    let resources = &facts["apk_resources"];
+    assert_eq!(resources["package"], "com.avero.signed");
+    assert!(resources["strings"]
+        .as_array()
+        .expect("resource strings")
+        .iter()
+        .any(|entry| entry["value"] == "Avero Signed Sample"));
+
+    // Unsigned fixture with resources: resources parse, no signatures.
+    let mut artifact = probe_bytes(RES_APK, None);
+    let report = analyze(
+        &mut artifact,
+        RES_APK,
+        &ScanOptions {
+            use_cache: false,
+            ..ScanOptions::default()
+        },
+    );
+    let facts = &report.facts["apk.structure"];
+    assert!(facts["apk_signature_schemes"]
+        .as_array()
+        .map(|schemes| schemes.is_empty())
+        .unwrap_or(true));
+    assert_eq!(facts["apk_resources"]["package"], "com.avero.signed");
 }
 
 #[test]

@@ -1,4 +1,4 @@
-# AveroDisassembler — UI specification
+﻿# AveroDisassembler — UI specification
 
 | | |
 |---|---|
@@ -329,7 +329,7 @@ For every screen: **data** (fields from the report/API), **layout**, **interacti
 
 - **Data**: `facts["apk.structure"]` (`apk_package`, `apk_version_code/name`, `apk_min_sdk`,
   `apk_target_sdk`, `apk_debuggable`, `apk_allow_backup`, `apk_permissions`,
-  `apk_dangerous_permissions`, `apk_components[]`, `apk_exported_components`).
+  `apk_dangerous_permissions`, `apk_components[]`, `apk_exported_components`,\n  `apk_signature_schemes`, `apk_signers[]` (subject/issuer/validity/SHA-256/flags),\n  `apk_resources` (package, entry count, string resources)).
 - **Layout**: summary cards; **risk banner** if `debuggable=true` (high) or exported
   components without permission; permissions table grouped dangerous/normal; components
   table (kind, name, exported, permission) with warning icon on risky rows.

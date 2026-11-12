@@ -1,6 +1,8 @@
 //! Avero core library — fast, evidence-first reverse engineering workbench.
 
 pub mod analyzers;
+pub mod apksig;
+pub mod arsc;
 pub mod axml;
 pub mod decompile;
 pub mod disasm;

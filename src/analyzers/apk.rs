@@ -9,6 +9,8 @@ use std::collections::BTreeSet;
 use serde_json::json;
 
 use crate::analyzers::{AnalysisContext, Analyzer, Fragment};
+use crate::apksig;
+use crate::arsc;
 use crate::axml;
 use crate::evidence::{loc, make_evidence};
 use crate::findings::make_finding;
@@ -98,12 +100,15 @@ impl Analyzer for ApkAnalyzer {
             .iter()
             .filter(|name| name.starts_with("res/") && !name.ends_with('/'))
             .count();
-        let signing_v1 = names.iter().any(|name| {
-            let upper = name.to_ascii_uppercase();
-            upper.starts_with("META-INF/")
-                && (upper.ends_with(".RSA") || upper.ends_with(".DSA") || upper.ends_with(".EC"))
-        });
-        let signing_v2 = info.apk_sig_block;
+        let signature = apksig::parse_apk(ctx.data, &info);
+        let signing_v1 = signature.v1_entries > 0;
+        let signing_v2 = signature
+            .schemes
+            .iter()
+            .any(|scheme| matches!(scheme.as_str(), "v2" | "v3" | "v3.1"));
+        let resource_table = zipscan::find_entry(&info, "resources.arsc")
+            .and_then(|entry| zipscan::read_entry(ctx.data, entry))
+            .and_then(|bytes| arsc::parse(&bytes));
         let compressed: u64 = info.entries.iter().map(|entry| entry.compressed_size).sum();
         let uncompressed: u64 = info
             .entries
@@ -143,6 +148,18 @@ impl Analyzer for ApkAnalyzer {
             .insert("signing_v2_or_v3".into(), json!(signing_v2));
         fragment
             .facts
+            .insert("apk_signature_schemes".into(), json!(signature.schemes));
+        fragment
+            .facts
+            .insert("apk_signers".into(), json!(signature.signers));
+        if let Some(table) = &resource_table {
+            fragment.facts.insert("apk_resources".into(), json!(table));
+            fragment
+                .facts
+                .insert("apk_resource_package".into(), json!(table.package));
+        }
+        fragment
+            .facts
             .insert("compression_ratio".into(), json!(ratio));
         fragment
             .facts
@@ -165,7 +182,10 @@ impl Analyzer for ApkAnalyzer {
             .insert("apk_signed_v1".into(), json!(signing_v1));
         fragment
             .metadata
-            .insert("apk_signed_v2_v3".into(), json!(signing_v2));
+            .insert("apk_signature_schemes".into(), json!(signature.schemes));
+        fragment
+            .metadata
+            .insert("apk_signer_count".into(), json!(signature.signers.len()));
 
         // ---- AndroidManifest.xml (AXML) ----------------------------------
         let manifest_entry = zipscan::find_entry(&info, "AndroidManifest.xml");
@@ -379,7 +399,7 @@ impl Analyzer for ApkAnalyzer {
             Vec::new(),
         );
 
-        if !signing_v1 && !signing_v2 {
+        if signature.schemes.is_empty() {
             fragment.findings.push(make_finding(
                 Severity::Medium,
                 "android",
@@ -388,6 +408,58 @@ impl Analyzer for ApkAnalyzer {
                     .to_string(),
                 &[&evidence],
                 0.8,
+                None,
+            ));
+        } else if signing_v1 && !signing_v2 {
+            fragment.findings.push(make_finding(
+                Severity::Low,
+                "android",
+                "APK is signed with v1 (JAR) only",
+                "Only the legacy v1 JAR signature was found. Android 7.0+ supports APK Signature Scheme v2/v3, which protects the whole file and is required by newer target SDK levels."
+                    .to_string(),
+                &[&evidence],
+                0.6,
+                Some("Re-sign with v2/v3 enabled (apksigner defaults to both).".to_string()),
+            ));
+        }
+        for signer in &signature.signers {
+            if signer.debug_certificate {
+                fragment.findings.push(make_finding(
+                    Severity::Medium,
+                    "android",
+                    "APK is signed with a debug certificate",
+                    format!(
+                        "Signer subject '{}' looks like the Android debug keystore (CN=Android Debug). Debug-signed builds are not release builds and cannot be updated by the official distributor.",
+                        signer.subject
+                    ),
+                    &[&evidence],
+                    0.8,
+                    None,
+                ));
+                break;
+            }
+        }
+        if signature.signers.iter().any(|signer| signer.expired) {
+            fragment.findings.push(make_finding(
+                Severity::Medium,
+                "android",
+                "APK signing certificate is expired",
+                "At least one signer certificate is outside its validity period. Android still installs such APKs in many cases, but it indicates a stale signing key or a re-pack."
+                    .to_string(),
+                &[&evidence],
+                0.7,
+                None,
+            ));
+        }
+        if signature.signers.iter().any(|signer| signer.self_signed) {
+            fragment.findings.push(make_finding(
+                Severity::Info,
+                "android",
+                "APK signing certificate is self-signed",
+                "The signer certificate is self-signed. This is normal for Android (no public CA chain), but it means the signer identity is only meaningful if the certificate is known from a previous version."
+                    .to_string(),
+                &[&evidence],
+                0.5,
                 None,
             ));
         }
