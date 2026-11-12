@@ -74,6 +74,9 @@ apps/desktop/
 ```
 
 ## Notes / limits
+- Native `<button>` appearance is reset globally so the dark sidebar stays dark in WebView2
+  (no white UA button backgrounds); child processes use `CREATE_NO_WINDOW` so engine
+  install/decompile/disassembly never flash cmd windows.
 
 - The desktop shell reuses the same API/data contracts as the web UI but is a standalone
   Vite app (no Next.js runtime).

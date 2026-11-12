@@ -32,6 +32,8 @@ body {
 
 button, input, select, textarea { font: inherit; color: inherit; }
 
+button { appearance: none; -webkit-appearance: none; background-color: transparent; border: 0; }
+
 a { color: var(--accent); text-decoration: none; }
 
 .app { display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
