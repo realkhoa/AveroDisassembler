@@ -1,4 +1,4 @@
-# Engine packs & installer
+﻿# Engine packs & installer
 
 Avero delegates heavy lifting (native decompilation, .NET decompilation, DEX, …) to
 external open-source engines using a **sidecar process** model: no GPL/AGPL code is linked
@@ -83,7 +83,7 @@ avero engine install rizin --from D:\bundle\rizin-0.9.1-windows-x64.zip
 | ID | Method | License | Used for |
 |---|---|---|---|
 | `ilspycmd` | dotnet-tool | MIT | `avero dotnet decompile` |
-| `rizin` | zip | LGPL-3.0 | batch disassembly/CFG (adapter P2, planned) |
+| `rizin` | zip | LGPL-3.0 | `avero disasm` + API `/disassembly` |
 | `ghidra` | zip | Apache-2.0 | native decompilation via `avero decompile` (JDK 25+ required) |
 | `jadx` | zip | Apache-2.0 | APK/DEX decompilation (adapter P3) |
 
@@ -128,3 +128,25 @@ The same engine is available through the API:
 Caveats: headless analysis of large binaries is CPU-heavy (minutes); the default CLI limit
 is 300 functions and the default timeout is 900 s. Ghidra output is derived code, not the
 original source; treat it as an aid, not ground truth.
+
+## Native disassembly via rizin
+
+rizin 0.9.1 is installed as a sidecar (LGPL-3.0) and driven in JSON mode:
+
+```powershell
+avero engine pin rizin
+avero engine install rizin
+avero disasm notepad.exe --count 16
+avero disasm notepad.exe --address 0x1400019c0 --count 8 --json
+avero disasm notepad.exe --analyze --count 32       # runs `aa` first (slower)
+```
+
+How it works:
+
+1. Avero runs `rizin -q -c "e scr.color=0" [-c "aa"] -c "s <addr|entry0>" -c "pdj <n>" <file>`.
+2. `pdj` emits JSON instructions: `offset`, `bytes`, `disasm`, `size`, `type`.
+3. Avero splits mnemonic/operands, bounds the count (1–1000) and returns/prints a table.
+
+The same adapter backs `GET /api/reports/{id}/disassembly?start=0x...&limit=N&analyze=true`.
+Without `--analyze`/`analyze=true`, rizin still resolves `entry0` from the file header, so
+entry/address seeks are fast; function-name seeks need analysis.

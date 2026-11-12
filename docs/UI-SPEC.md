@@ -357,12 +357,19 @@ For every screen: **data** (fields from the report/API), **layout**, **interacti
 - **Acceptance**: decompile of a type returns C# in Monaco; progress updates without page
   reload; errors actionable; file mode shows "API mode required".
 
-### 6.13 Disassembly (M4 placeholder)
+### 6.13 Disassembly (implemented API, M4 UI)
 
-- Until `/disasm` is implemented, show a clear empty state ("Disassembly requires API mode
-  and is not available yet") plus the reason and a link to Coverage.
-- When available: virtualized rows (address · bytes · mnemonic · operands), jump-to-address,
-  follow call/jump (read-only), evidence highlight. No patching.
+The API is live: `GET /api/reports/{id}/disassembly?start=<addr|entry0>&limit=<n>&analyze=true`.
+Returns `items[]` with `address`, `bytes_hex`, `mnemonic`, `operands`, `size`, `kind`.
+
+- **Layout**: toolbar (address input, go, prev/next page, analyze toggle); virtualized rows
+  Address · Bytes · Mnemonic · Operands; current function/address label from the query.
+- **Interactions**: jump to address, page through `limit` chunks (default 64, max 1000),
+  copy address/bytes; clicking an address updates the URL (`?start=`).
+- **States**: 409 `engine_missing` → instructions `avero engine install rizin`; 500 → error
+  panel with retry; empty result → "no instructions at this address".
+- **Acceptance**: requesting `start=0x1400019c0&limit=4` on a PE report renders the four
+  instructions returned by the core; pagination uses the URL; no patching.
 
 ### 6.14 Coverage, unknowns, warnings
 
@@ -577,9 +584,9 @@ smoke test may call the API if available but must skip gracefully.
 - Acceptance: decompile result renders for a test assembly; engine install failure is
   surfaced; no writes to artifacts.
 
-**M4 — Disassembly, diff, graphs (future)**
-- Consume `/disassembly` and `/diffs`; CFG/call graph optional. Placeholders now must
-  clearly state availability.
+**M4 — Disassembly, diff, graphs (partially available)**
+- Disassembly endpoint (`/disassembly`) is live (v0.8.0); build the M4 screen against it.
+- Diff endpoint and CFG/call graph are future; keep those states clearly labelled.
 
 ## 15. Deliverables and handoff checklist
 

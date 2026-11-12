@@ -1,4 +1,4 @@
-# AveroDisassembler
+﻿# AveroDisassembler
 
 > Fast, evidence-first Reverse Engineering workbench. **Native Rust binary — no Python, no runtime dependencies.**
 
@@ -6,12 +6,13 @@
 [![Release](https://img.shields.io/github/v/release/realkhoa/AveroDisassembler?sort=semver)](https://github.com/realkhoa/AveroDisassembler/releases)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
-**Status: v0.7.0 — Rust core + local API + Ghidra decompile** (P0/P1/P2). Static triage and
+**Status: v0.8.0 — Rust core + local API + Ghidra decompile + rizin disassembly** (P0/P1/P2). Static triage and
 analysis for PE, .NET, ELF, Mach-O, APK (including the **binary AndroidManifest.xml**), Unity
 IL2CPP, Godot PCK, firmware containers, scripts and WASM. Includes a **native signature
 engine** (YARA subset), an **engine installer** (ILSpyCmd, rizin, Ghidra, jadx),
 **`avero dotnet decompile`**, **native decompilation via Ghidra headless**
-(`avero decompile`) and a **local REST/SSE API** (`avero serve`) for the workbench UI.
+(`avero decompile`), **rizin disassembly** (`avero disasm`) and a **local REST/SSE API**
+(`avero serve`) for the workbench UI.
 Every report is JSON/Markdown/HTML with verifiable evidence.
 
 **UI is specified but not built here** — it is owned by separate UI agents. The complete
@@ -55,6 +56,7 @@ target\release\avero.exe engine install ilspycmd
 target\release\avero.exe dotnet decompile SampleLib.dll --type SampleLib.Class1 --out .\decompiled
 target\release\avero.exe engine install ghidra          # requires JDK 25+
 target\release\avero.exe decompile notepad.exe --limit 20 --out .\native-decompiled
+target\release\avero.exe disasm notepad.exe --count 16
 target\release\avero.exe engine install rizin
 target\release\avero.exe engine list
 
@@ -78,6 +80,7 @@ Prebuilt binaries are attached to [GitHub Releases](https://github.com/realkhoa/
 | `apk <file>` | Parse binary `AndroidManifest.xml`: package/version/SDK, permissions, debuggable, components (exported/permission); `--json` |
 | `dotnet decompile <asm>` | Decompile an assembly or type with ILSpyCmd (`--type`, `--out`, `--json`) |
 | `decompile <file>` | Native decompilation via Ghidra headless (`--function`, `--limit`, `--timeout`, `--out`, `--json`); requires Ghidra + JDK 25+ |
+| `disasm <file>` | Disassembly via rizin (`--address`, `--count`, `--analyze`, `--json`) |
 | `engine list/doctor` | Engine packs and local prerequisite checks |
 | `engine install <id>` | Install an engine pack (zip + SHA-256, or `dotnet-tool`); `--from` for offline archives, `--force`, `--allow-unpinned` |
 | `engine pin <id>` | Download the archive, compute SHA-256 and pin it in the manifest |

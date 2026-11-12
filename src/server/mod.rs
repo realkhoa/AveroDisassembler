@@ -1,4 +1,4 @@
-//! Local REST/SSE API (`avero.api/v1`) implementing `docs/api/openapi.yaml`.
+﻿//! Local REST/SSE API (`avero.api/v1`) implementing `docs/api/openapi.yaml`.
 //!
 //! Design constraints:
 //! - loopback only, no authentication (local single-user tool);
@@ -19,6 +19,7 @@ use serde_json::{json, Value};
 use tiny_http::{Header, Method, Request, Response, Server, StatusCode};
 
 use crate::decompile;
+use crate::disasm;
 use crate::engine;
 use crate::hashing;
 use crate::ir::TOOL_VERSION;
@@ -407,6 +408,60 @@ fn handle_hex(state: &AppState, request: &HttpRequest, report_id: &str) -> ApiRe
                 "artifact bytes are no longer available",
             ),
         ),
+    }
+}
+
+fn parse_address(raw: &str) -> Option<u64> {
+    let raw = raw.trim();
+    if let Some(hex) = raw.strip_prefix("0x").or_else(|| raw.strip_prefix("0X")) {
+        u64::from_str_radix(hex, 16).ok()
+    } else {
+        raw.parse::<u64>().ok()
+    }
+}
+
+fn handle_disassembly(state: &AppState, request: &HttpRequest, report_id: &str) -> ApiResult {
+    let Some(artifact_path) = artifact_path_of(state, report_id) else {
+        return not_found("report not found");
+    };
+    if disasm::locate_rizin().is_none() {
+        return ApiResult::Json(
+            409,
+            error_json(
+                "engine_missing",
+                "rizin is not installed; run `avero engine install rizin`",
+            ),
+        );
+    }
+    let address = request
+        .query_str("start")
+        .or_else(|| request.query_str("address"))
+        .and_then(parse_address);
+    let count = request
+        .query_usize("limit")
+        .or_else(|| request.query_usize("count"))
+        .unwrap_or(64)
+        .clamp(1, 1000);
+    let analyze = request
+        .query_str("analyze")
+        .map(|value| value == "true" || value == "1")
+        .unwrap_or(false);
+    let options = disasm::DisasmOptions {
+        address,
+        count,
+        analyze,
+    };
+    match disasm::disassemble_file(&artifact_path, &options) {
+        Ok(result) => ApiResult::Json(
+            200,
+            json!({
+                "address": result.address,
+                "items": result.instructions,
+                "next_cursor": Value::Null,
+                "total": result.instructions.len(),
+            }),
+        ),
+        Err(error) => ApiResult::Json(500, error_json("disassembly_failed", &error.to_string())),
     }
 }
 
@@ -866,8 +921,8 @@ pub fn handle_request(state: &Arc<AppState>, request: &HttpRequest) -> ApiResult
             ["api", "reports", report_id, "hex"] => handle_hex(state, request, report_id),
             ["api", "reports", report_id, "apk-manifest"] => handle_apk_manifest(state, report_id),
             ["api", "reports", report_id, "dotnet"] => handle_dotnet(state, report_id),
-            ["api", "reports", _report_id, "disassembly"] => {
-                not_implemented("disassembly is not implemented yet")
+            ["api", "reports", report_id, "disassembly"] => {
+                handle_disassembly(state, request, report_id)
             }
             ["api", "jobs", job_id] => handle_job_snapshot(state, job_id),
             ["api", "jobs", job_id, "events"] => handle_job_events(state, job_id),

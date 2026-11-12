@@ -1,4 +1,4 @@
-//! Avero CLI — fast, native triage and static analysis (no Python runtime).
+﻿//! Avero CLI — fast, native triage and static analysis (no Python runtime).
 
 use std::collections::HashSet;
 use std::path::{Path, PathBuf};
@@ -51,6 +51,8 @@ enum Commands {
     },
     /// Native decompilation via Ghidra headless (sidecar engine)
     Decompile(DecompileArgs),
+    /// Disassemble a binary with rizin (sidecar engine)
+    Disasm(DisasmArgs),
     /// Show version and environment
     Version,
     /// Run the local REST/SSE API for the workbench UI
@@ -167,6 +169,24 @@ struct DecompileArgs {
     json: bool,
 }
 
+#[derive(Args)]
+struct DisasmArgs {
+    /// Binary to disassemble
+    path: PathBuf,
+    /// Address to start at (hex like 0x140001000 or decimal); default: entry0
+    #[arg(long)]
+    address: Option<String>,
+    /// Number of instructions to disassemble
+    #[arg(long, default_value_t = 32)]
+    count: usize,
+    /// Run rizin analysis first (slower; needed for function/name seeks)
+    #[arg(long)]
+    analyze: bool,
+    /// Print JSON instead of a table
+    #[arg(long)]
+    json: bool,
+}
+
 #[derive(Subcommand)]
 enum EngineCommands {
     /// List engine packs and install status
@@ -234,6 +254,7 @@ fn main() -> std::process::ExitCode {
         },
         Commands::Version => run_version(),
         Commands::Decompile(args) => run_decompile(args),
+        Commands::Disasm(args) => run_disasm(args),
         Commands::Serve(args) => avero::server::run(&args.bind, args.port, &args.cors_origin),
         Commands::Engine { command } => match command {
             EngineCommands::List => run_engine_list(),
@@ -693,6 +714,58 @@ fn run_decompile(args: DecompileArgs) -> Result<()> {
     }
     println!("  json: {}", json_path.display());
     println!("  files: {} C source file(s)", written.len());
+    Ok(())
+}
+
+fn run_disasm(args: DisasmArgs) -> Result<()> {
+    if !args.path.is_file() {
+        return Err(anyhow!("binary not found: {}", args.path.display()));
+    }
+    let address = match args.address.as_deref() {
+        Some(raw) => {
+            let raw = raw.trim();
+            let parsed =
+                if let Some(hex) = raw.strip_prefix("0x").or_else(|| raw.strip_prefix("0X")) {
+                    u64::from_str_radix(hex, 16)
+                } else if raw.chars().any(|character| character.is_ascii_hexdigit())
+                    && raw.chars().any(|character| character.is_ascii_alphabetic())
+                {
+                    u64::from_str_radix(raw, 16)
+                } else {
+                    raw.parse::<u64>()
+                };
+            Some(parsed.with_context(|| format!("invalid address: {raw}"))?)
+        }
+        None => None,
+    };
+    let options = avero::disasm::DisasmOptions {
+        address,
+        count: args.count,
+        analyze: args.analyze,
+    };
+    let result = avero::disasm::disassemble_file(&args.path, &options)?;
+    if args.json {
+        println!("{}", serde_json::to_string_pretty(&result)?);
+        return Ok(());
+    }
+    println!(
+        "{} rizin disassembly at {} ({} instruction(s))",
+        "ok".green().bold(),
+        result.address,
+        result.instructions.len()
+    );
+    let mut table = Table::new();
+    table.load_style(UTF8_FULL);
+    table.set_header(vec!["Address", "Bytes", "Instruction", "Size"]);
+    for instruction in &result.instructions {
+        table.add_row(vec![
+            Cell::new(format!("0x{:x}", instruction.address)),
+            Cell::new(instruction.bytes_hex.clone()),
+            Cell::new(format!("{} {}", instruction.mnemonic, instruction.operands)),
+            Cell::new(instruction.size.to_string()),
+        ]);
+    }
+    println!("{table}");
     Ok(())
 }
 

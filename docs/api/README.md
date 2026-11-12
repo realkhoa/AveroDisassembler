@@ -1,13 +1,14 @@
-# API contract (`avero.api/v1`)
+﻿# API contract (`avero.api/v1`)
 
 The UI workbench consumes the core through a **local-only** API. This directory defines the
 contract so the UI and core can be developed independently.
 
-**Status: implemented in v0.7.0.** Run `avero serve` (loopback `127.0.0.1:8787` by default)
+**Status: implemented in v0.8.0.** Run `avero serve` (loopback `127.0.0.1:8787` by default)
 and the UI can switch from file mode to API mode. All read endpoints plus scan and
-decompile jobs are live: `POST /api/reports/{id}/decompile` supports `engine` values
-`ilspycmd` (.NET) and `ghidra` (native, JDK 25+ required). Disassembly and diff return
-`501` until the next phase.
+decompile, disassembly and job endpoints are live: `POST /api/reports/{id}/decompile`
+supports `engine` values `ilspycmd` (.NET) and `ghidra` (native, JDK 25+ required), and
+`GET /api/reports/{id}/disassembly` returns rizin-backed instructions. Diff returns `501`
+until the next phase.
 
 | File | Purpose |
 |---|---|

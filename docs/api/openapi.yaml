@@ -1,4 +1,4 @@
-openapi: 3.1.0
+﻿openapi: 3.1.0
 info:
   title: Avero API
   version: "1.0.0"
@@ -315,8 +315,8 @@ paths:
   /api/reports/{reportId}/disassembly:
     get:
       tags: [reports]
-      summary: Paged disassembly (M4)
-      description: Returns 501 until the disassembly backend is implemented.
+      summary: Paged rizin disassembly
+      description: Disassembles the stored artifact at `start` (or rizin entry0) with `limit` instructions.
       parameters:
         - $ref: "#/components/parameters/ReportId"
         - name: start
