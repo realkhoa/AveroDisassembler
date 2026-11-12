@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| **Status** | Ready for implementation (spec v1.0) |
+| **Status** | Implemented in `apps/web` (M1–M4); spec v1.0 remains the contract |
 | **Audience** | UI agents implementing the Avero workbench |
 | **Backend** | Rust CLI exists (v0.6.0). File mode and the local REST/SSE API (`avero serve`, `avero.api/v1`) are **implemented**; UI agents can build against either mode. |
 | **Contracts** | `avero.report/v1` (report JSON), `avero.api/v1` (REST, see `docs/api/openapi.yaml`) |

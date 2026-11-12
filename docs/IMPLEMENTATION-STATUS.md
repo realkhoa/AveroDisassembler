@@ -1,13 +1,13 @@
-﻿# Implementation status — v0.11.0 (native Rust + local API + engines + APK/IL2CPP + report diff + cross-platform CI)
+﻿# Implementation status — v0.12.0 (native Rust core + web workbench M1–M4)
 
 | | |
 |---|---|
 | **Date** | 2026-11-12 |
-| **Version** | 0.11.0 (Rust) |
+| **Version** | 0.12.0 (Rust core) |
 | **Toolchain** | rustc 1.94.1 MSVC, VS 18 Community, Windows 11 26200 |
 | **Binary** | `target/release/avero.exe` — **4.12 MB**, no runtime dependency |
 | **Tests** | **74 passing** (54 unit + 7 CLI + 4 format + 4 analyzer + 5 APK manifest) |
-| **UI** | **Not built in this repository** — specified for separate UI agents in [UI-SPEC.md](UI-SPEC.md); API contract in [docs/api/](api/README.md) and **implemented** via `avero serve` |
+| **UI** | **Milestones M1–M4 implemented in `apps/web`** — Next.js 15 + React 19 + TypeScript strict. File + API modes, scan jobs over SSE, .NET/APK/signature views, Ghidra/ILSpyCmd decompile, rizin disassembly, engine manager, report diff. **22 Vitest tests** (including live API integration) and production build verified. See [HANDOVER-UI.md](HANDOVER-UI.md) and [UI-SPEC.md](UI-SPEC.md). |
 | **Related docs** | [Design](AVERO-DISASSEMBLER-DESIGN.md) · [Research](RE-RESEARCH-REPORT.md) · [Signatures](SIGNATURES.md) · [Engines](ENGINES.md) |
 
 ---

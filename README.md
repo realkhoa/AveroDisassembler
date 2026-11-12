@@ -6,7 +6,7 @@
 [![Release](https://img.shields.io/github/v/release/realkhoa/AveroDisassembler?sort=semver)](https://github.com/realkhoa/AveroDisassembler/releases)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
-**Status: v0.11.0 — Rust core + local API + Ghidra decompile + rizin disassembly + APK signatures/resources + IL2CPP metadata dump + report diff** (P0/P1/P2/P3/P4). Static triage and
+**Status: v0.12.0 — Rust core + local API + engines + APK/IL2CPP + report diff + web workbench (M1–M4)** (P0/P1/P2/P3/P4). Static triage and
 analysis for PE, .NET, ELF, Mach-O, APK (including the **binary AndroidManifest.xml**), Unity
 IL2CPP, Godot PCK, firmware containers, scripts and WASM. Includes a **native signature
 engine** (YARA subset), an **engine installer** (ILSpyCmd, rizin, Ghidra, jadx),
@@ -17,10 +17,11 @@ APK analysis also parses **X.509 signing certificates** (v1/v2/v3 schemes), **`r
 
 Every report is JSON/Markdown/HTML with verifiable evidence.
 
-**UI is specified but not built here** — it is owned by separate UI agents. The complete
-specification (screens, flows, data contracts, design system, milestones, acceptance
-criteria) is in [docs/UI-SPEC.md](docs/UI-SPEC.md), with the API contract in
-[docs/api/](docs/api/README.md). The API is implemented and can be exercised today.
+**The web workbench lives in [`apps/web`](apps/web/README.md)** (Next.js 15 + React 19,
+TypeScript strict). Milestones M1-M4 are implemented: file-mode report viewer, local API
+mode with SSE scan jobs, APK/.NET/signature facts, Ghidra/ILSpyCmd decompile, rizin
+disassembly, engine management and report diff. Specification: [docs/UI-SPEC.md](docs/UI-SPEC.md);
+API contract: [docs/api/](docs/api/README.md).
 
 ## Why Rust?
 
@@ -149,6 +150,29 @@ flows through `Fragment` → `Report`.
 | [Technical design](docs/AVERO-DISASSEMBLER-DESIGN.md) | IR, analyzer protocol, pipeline, engine manager, CLI/API/MCP, security, testing |
 | [License matrix](docs/THIRD-PARTY-ENGINES.md) | How third-party engines and Rust dependencies are integrated |
 | [Research data](research/) | GitHub API snapshot, awesome lists, 112-repo metadata |
+
+## Web workbench (`apps/web`)
+
+```powershell
+pnpm install
+pnpm --filter web test       # 22 Vitest tests (unit + live API integration when AVERO_API_URL is set)
+pnpm --filter web typecheck
+pnpm --filter web build
+pnpm --filter web dev        # http://localhost:3000
+```
+
+Modes:
+
+- **File mode** — drop a `report.json` from `avero scan <file> --json`; fully offline.
+- **API mode** — start `avero serve --port 8787`, then scan artifacts from the UI. Jobs
+  stream progress over SSE; decompile/disassembly/diff/engines screens are enabled.
+
+Live integration test (requires the daemon):
+
+```powershell
+avero serve --port 8787
+$env:AVERO_API_URL="http://127.0.0.1:8787"; pnpm --filter web test
+```
 
 ## CI / releases
 
