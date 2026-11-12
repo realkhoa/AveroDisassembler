@@ -10,6 +10,7 @@ pub mod engine;
 pub mod evidence;
 pub mod findings;
 pub mod hashing;
+pub mod il2cpp;
 pub mod ir;
 pub mod pehdr;
 pub mod pipeline;

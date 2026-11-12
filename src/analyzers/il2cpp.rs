@@ -53,6 +53,56 @@ impl Analyzer for Il2CppAnalyzer {
         fragment
             .facts
             .insert("file_size".into(), json!(ctx.data.len()));
+        let mut parsed_summary: Option<(usize, usize)> = None;
+        match crate::il2cpp::parse(ctx.data) {
+            Ok(metadata) => {
+                fragment
+                    .facts
+                    .insert("type_count".into(), json!(metadata.type_count));
+                fragment
+                    .facts
+                    .insert("method_count".into(), json!(metadata.method_count));
+                fragment
+                    .facts
+                    .insert("image_count".into(), json!(metadata.image_count));
+                fragment.facts.insert(
+                    "image_names".into(),
+                    json!(metadata
+                        .images
+                        .iter()
+                        .map(|image| image.name.clone())
+                        .take(100)
+                        .collect::<Vec<_>>()),
+                );
+                fragment.facts.insert(
+                    "assembly_names".into(),
+                    json!(metadata.assemblies.iter().take(100).collect::<Vec<_>>()),
+                );
+                fragment.facts.insert(
+                    "types_sample".into(),
+                    json!(metadata
+                        .types_sample
+                        .iter()
+                        .take(200)
+                        .map(|entry| if entry.namespace.is_empty() {
+                            entry.name.clone()
+                        } else {
+                            format!("{}.{}", entry.namespace, entry.name)
+                        })
+                        .collect::<Vec<_>>()),
+                );
+                fragment.facts.insert(
+                    "methods_sample".into(),
+                    json!(metadata.methods_sample.iter().take(200).collect::<Vec<_>>()),
+                );
+                parsed_summary = Some((metadata.type_count, metadata.method_count));
+            }
+            Err(error) => {
+                fragment
+                    .unknowns
+                    .push(format!("IL2CPP metadata parser: {error}"));
+            }
+        }
         fragment
             .metadata
             .insert("il2cpp_metadata_version".into(), json!(version));
@@ -73,10 +123,18 @@ impl Analyzer for Il2CppAnalyzer {
         fragment.findings.push(make_finding(
             Severity::Info,
             "unity",
-            format!("Unity IL2CPP metadata (version {version})"),
-            "This is the global-metadata.dat of a Unity IL2CPP game. The version determines the header layout; \
-             dumping types/methods requires the matching parser (phase P3). The Cpp2IL sidecar can be used to extract types/methods."
-                .to_string(),
+            match parsed_summary {
+                Some((types, methods)) => format!(
+                    "Unity IL2CPP metadata (version {version}, {types} types, {methods} methods)"
+                ),
+                None => format!("Unity IL2CPP metadata (version {version})"),
+            },
+            match parsed_summary {
+                Some((types, methods)) => format!(
+                    "Unity IL2CPP global-metadata.dat was parsed: {types} type definitions and {methods} method definitions are available in the report facts (types_sample/methods_sample). Method bodies are native and require the Cpp2IL sidecar for full IL recovery."
+                ),
+                None => "This is the global-metadata.dat of a Unity IL2CPP game. The version determines the header layout; dumping types/methods requires the matching parser or the Cpp2IL sidecar.".to_string(),
+            },
             &[&evidence],
             0.9,
             None,
@@ -86,9 +144,12 @@ impl Analyzer for Il2CppAnalyzer {
                 "IL2CPP metadata version {version} has not been verified — header layout may differ"
             ));
         }
-        fragment
-            .unknowns
-            .push("IL2CPP type/method dump not run yet (phase P3)".to_string());
+        if parsed_summary.is_none() {
+            fragment.unknowns.push(
+                "IL2CPP type/method dump not available for this metadata file (see unknown above)"
+                    .to_string(),
+            );
+        }
         fragment.evidence.push(evidence);
         fragment
     }
