@@ -150,3 +150,17 @@ daemon and verifies report, manifest, strings, hex, engines and rizin disassembl
 
 Known limits: decompile/disassembly/diff require API mode and installed engines; Monaco is
 replaced by a lightweight read-only `<pre>` viewer; no Playwright E2E yet.
+
+## 9. End-to-end tests (Playwright + axe)
+
+```bash
+pnpm --filter web e2e
+```
+
+- File mode: home → sample report → findings/evidence/sections; settings mode switch;
+  unknown-report error state.
+- API mode (mocked routes): scan + SSE, engines, disassembly, diff, decompile error.
+- Accessibility: axe checks fail only on serious/critical violations.
+
+CI (`.github/workflows/web.yml`) installs Chromium and runs the E2E suite after the
+production build. Screenshots live in `docs/screenshots/`.

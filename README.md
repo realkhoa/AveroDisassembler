@@ -1,4 +1,4 @@
-﻿# AveroDisassembler
+# AveroDisassembler
 
 > Fast, evidence-first Reverse Engineering workbench. **Native Rust binary — no Python, no runtime dependencies.**
 
@@ -6,7 +6,7 @@
 [![Release](https://img.shields.io/github/v/release/realkhoa/AveroDisassembler?sort=semver)](https://github.com/realkhoa/AveroDisassembler/releases)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
-**Status: v0.12.0 — Rust core + local API + engines + APK/IL2CPP + report diff + web workbench (M1–M4)** (P0/P1/P2/P3/P4). Static triage and
+**Status: v0.13.0 — Rust core + local API + engines + APK/IL2CPP + report diff + polished web workbench (M1–M4, E2E + axe)** (P0/P1/P2/P3/P4). Static triage and
 analysis for PE, .NET, ELF, Mach-O, APK (including the **binary AndroidManifest.xml**), Unity
 IL2CPP, Godot PCK, firmware containers, scripts and WASM. Includes a **native signature
 engine** (YARA subset), an **engine installer** (ILSpyCmd, rizin, Ghidra, jadx),

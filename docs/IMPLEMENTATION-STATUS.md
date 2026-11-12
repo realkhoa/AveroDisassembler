@@ -1,9 +1,9 @@
-﻿# Implementation status — v0.12.0 (native Rust core + web workbench M1–M4)
+# Implementation status — v0.13.0 (native Rust core + web workbench M1–M4, E2E + axe)
 
 | | |
 |---|---|
 | **Date** | 2026-11-12 |
-| **Version** | 0.12.0 (Rust core) |
+| **Version** | 0.13.0 (Rust core) |
 | **Toolchain** | rustc 1.94.1 MSVC, VS 18 Community, Windows 11 26200 |
 | **Binary** | `target/release/avero.exe` — **4.12 MB**, no runtime dependency |
 | **Tests** | **74 passing** (54 unit + 7 CLI + 4 format + 4 analyzer + 5 APK manifest) |

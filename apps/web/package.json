@@ -1,6 +1,6 @@
 {
   "name": "web",
-  "version": "0.1.0",
+  "version": "0.13.0",
   "private": true,
   "scripts": {
     "dev": "next dev",
@@ -8,7 +8,9 @@
     "start": "next start",
     "lint": "next lint",
     "test": "vitest run",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "e2e": "playwright test",
+    "e2e:headed": "playwright test --headed"
   },
   "dependencies": {
     "@tanstack/react-virtual": "^3.11.0",
@@ -20,6 +22,8 @@
     "tailwind-merge": "^2.5.5"
   },
   "devDependencies": {
+    "@axe-core/playwright": "^4.14.0",
+    "@playwright/test": "^1.65.0",
     "@testing-library/react": "^16.1.0",
     "@types/node": "^22.10.0",
     "@types/react": "^19.0.0",

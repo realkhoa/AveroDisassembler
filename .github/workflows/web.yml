@@ -40,3 +40,17 @@ jobs:
 
       - name: Production build
         run: pnpm --filter web build
+
+      - name: Install Playwright browsers
+        run: pnpm --filter web exec playwright install --with-deps chromium
+
+      - name: E2E tests (Playwright + axe)
+        run: pnpm --filter web e2e
+
+      - name: Upload Playwright report on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: apps/web/playwright-report
+          if-no-files-found: ignore

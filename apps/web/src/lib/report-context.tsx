@@ -126,6 +126,18 @@ export function ReportProvider({ children }: { children: ReactNode }) {
       setActiveReport(report);
       return report;
     } catch {
+      // Deep links to the bundled sample report work in file mode even in a fresh
+      // browser profile (no prior drop / recent report).
+      if (getAdapterMode() === "FILE" && reportId === sampleReportData.artifact.id) {
+        try {
+          const dataSource = getDataSource();
+          const sample = await dataSource.loadReport(JSON.stringify(sampleReportData));
+          setActiveReport(sample);
+          return sample;
+        } catch {
+          return null;
+        }
+      }
       return null;
     }
   };

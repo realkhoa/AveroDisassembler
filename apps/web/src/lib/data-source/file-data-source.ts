@@ -49,8 +49,26 @@ export class FileDataSource implements AveroDataSource {
       this.artifactBytes.set(reportId, rawBytes);
     }
 
+    this.persistReport(parsed);
     this.saveRecentSummary(parsed);
     return parsed;
+  }
+
+  /**
+   * @brief Persists a report JSON document so deep links survive a reload.
+   * @param report Parsed report.
+   */
+  private persistReport(report: AveroReport): void {
+    if (typeof window === "undefined" || !window.localStorage) return;
+    try {
+      const serialized = JSON.stringify(report);
+      // Keep browser storage reasonable; large reports stay in memory only.
+      if (serialized.length <= 2_000_000) {
+        window.localStorage.setItem(`avero_report_${report.artifact.id}`, serialized);
+      }
+    } catch {
+      // Ignore quota errors.
+    }
   }
 
   /**
@@ -69,7 +87,20 @@ export class FileDataSource implements AveroDataSource {
    * @throws Error if report is not found in memory.
    */
   public async getReport(reportId: string): Promise<AveroReport> {
-    const report = this.reports.get(reportId);
+    let report = this.reports.get(reportId);
+
+    if (!report && typeof window !== "undefined" && window.localStorage) {
+      try {
+        const cached = window.localStorage.getItem(`avero_report_${reportId}`);
+        if (cached) {
+          report = JSON.parse(cached) as AveroReport;
+          this.reports.set(reportId, report);
+        }
+      } catch {
+        // Fall through to the not-found error.
+      }
+    }
+
     if (!report) {
       throw new Error(`Report not found in memory: ${reportId}`);
     }

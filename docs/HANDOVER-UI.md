@@ -157,3 +157,24 @@ AVERO_API_URL=http://127.0.0.1:8787 pnpm --filter web test
 
 Remaining UI follow-ups: Monaco/CFG/call-graph polish, Playwright E2E + axe, saved views and
 i18n; the API already exposes the needed contracts.
+
+## 8. E2E, accessibility and screenshots
+
+Playwright E2E + axe coverage is now part of the workbench:
+
+- `apps/web/e2e/file-mode.spec.ts` — home/sample report, findings/evidence/sections,
+  settings File→API mode persistence, unknown-report deep-link error state, axe
+  serious/critical checks on home + overview.
+- `apps/web/e2e/api-mode.spec.ts` — API scan over an SSE job, engines list, rizin
+  disassembly rendering, report diff, decompile engine-missing error, all with Playwright
+  route mocks (no daemon required in CI).
+
+Commands:
+
+```bash
+pnpm --filter web e2e        # 11 Playwright tests (server built/started automatically)
+pnpm --filter web e2e:headed # watch the browser
+```
+
+Latest local run: **11 passed (44s)**. Screenshots: `docs/screenshots/` (home file mode,
+APK overview, settings mode switch).
