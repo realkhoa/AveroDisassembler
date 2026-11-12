@@ -48,6 +48,19 @@ describe("ApiDataSource", () => {
     expect(fetchMock.mock.calls[0][0]).toBe(`${BASE}/api/reports/abc`);
   });
 
+  it("builds paged finding queries", async () => {
+    fetchMock.mockResolvedValueOnce(
+      jsonResponse({ items: [{ id: "F-1", severity: "high", title: "x" }], total: 1, next_cursor: null }),
+    );
+    const page = await source.getFindings("abc", { severity: "high", q: "x", limit: 10 });
+    expect(page.total).toBe(1);
+    const url = fetchMock.mock.calls[0][0] as string;
+    expect(url).toContain("/api/reports/abc/findings?");
+    expect(url).toContain("severity=high");
+    expect(url).toContain("q=x");
+    expect(url).toContain("limit=10");
+  });
+
   it("builds paged string queries", async () => {
     fetchMock.mockResolvedValueOnce(
       jsonResponse({ items: [{ offset: 1, value: "hi", encoding: "ascii" }], total: 1, next_cursor: null }),

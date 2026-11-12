@@ -4,7 +4,7 @@
  * @details Implements the contract interface defined in UI-SPEC Section 4.2.
  */
 
-import type { AveroReport, Evidence, ReportSummary, StringEntry } from "@/types/report";
+import type { AveroReport, Evidence, Finding, ReportSummary, StringEntry } from "@/types/report";
 import type {
   ApiHealth,
   DecompileRequest,
@@ -12,6 +12,7 @@ import type {
   DisassemblyPage,
   DisassemblyQuery,
   EngineInfo,
+  FindingQuery,
   JobEvent,
   JobSnapshot,
   ScanOptions,
@@ -98,6 +99,9 @@ export interface AveroDataSource {
   loadReport(jsonContent: string, rawBytes?: Uint8Array): Promise<AveroReport>;
 
   // ---- API mode (M2–M4); FileDataSource leaves these undefined -----------------
+  /** @brief Paged finding search (API mode only). */
+  getFindings?(reportId: string, query?: FindingQuery): Promise<Page<Finding>>;
+
   /** @brief API/engine health (API mode only). */
   health?(): Promise<ApiHealth>;
 

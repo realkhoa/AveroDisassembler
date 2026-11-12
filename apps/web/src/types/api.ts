@@ -59,6 +59,15 @@ export interface EngineInfo {
   homepage?: string | null;
 }
 
+export interface FindingQuery {
+  severity?: string;
+  category?: string;
+  q?: string;
+  min_confidence?: number;
+  cursor?: string;
+  limit?: number;
+}
+
 export interface Instruction {
   address: number;
   bytes_hex?: string;

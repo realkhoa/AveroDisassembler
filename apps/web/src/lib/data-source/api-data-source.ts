@@ -6,7 +6,7 @@
  *          engines, APK manifest/dotnet facts and report diffs.
  */
 
-import type { AveroReport, Evidence, ReportSummary, StringEntry } from "@/types/report";
+import type { AveroReport, Evidence, Finding, ReportSummary, StringEntry } from "@/types/report";
 import type {
   ApiHealth,
   DecompileRequest,
@@ -15,6 +15,7 @@ import type {
   DisassemblyPage,
   DisassemblyQuery,
   EngineInfo,
+  FindingQuery,
   JobEvent,
   JobSnapshot,
   ScanOptions,
@@ -89,6 +90,34 @@ export class ApiDataSource implements AveroDataSource {
     } catch {
       return null;
     }
+  }
+
+  /** @brief Paged finding search via `/api/reports/{id}/findings`. */
+  public async getFindings(
+    reportId: string,
+    query?: FindingQuery,
+  ): Promise<Page<Finding>> {
+    const parameters = new URLSearchParams();
+    if (query?.severity) parameters.set("severity", query.severity);
+    if (query?.category) parameters.set("category", query.category);
+    if (query?.q) parameters.set("q", query.q);
+    if (query?.min_confidence !== undefined) {
+      parameters.set("min_confidence", String(query.min_confidence));
+    }
+    if (query?.cursor) parameters.set("cursor", query.cursor);
+    if (query?.limit !== undefined) parameters.set("limit", String(query.limit));
+    const suffix = parameters.toString() ? `?${parameters.toString()}` : "";
+    const page = await this.request<{
+      items: Finding[];
+      total: number | null;
+      next_cursor: string | null;
+    }>(`/api/reports/${encodeURIComponent(reportId)}/findings${suffix}`);
+    return {
+      items: page.items,
+      total: page.total ?? page.items.length,
+      offset: 0,
+      limit: query?.limit,
+    };
   }
 
   /** @brief Paged string search via `/api/reports/{id}/strings`. */
