@@ -14,7 +14,6 @@ engine** (YARA subset), an **engine installer** (ILSpyCmd, rizin, Ghidra, jadx),
 (`avero decompile`), **rizin disassembly** (`avero disasm`) and a **local REST/SSE API**
 (`avero serve`) for the workbench UI.
 APK analysis also parses **X.509 signing certificates** (v1/v2/v3 schemes), **`resources.arsc`** string resources and Unity IL2CPP **global-metadata.dat** (v27-31) types/methods/images/assemblies.
-esources.arsc\** string resources.
 
 Every report is JSON/Markdown/HTML with verifiable evidence.
 
