@@ -1451,11 +1451,11 @@ export default function App() {
           {report && tab === "sections" && <SectionsView report={report} />}
           {report && tab === "imports" && <ImportsView report={report} />}
           {report && tab === "strings" && <StringsView report={report} mode={mode} apiUrl={apiUrl} />}
-          {report && tab === "hex" && <HexView report={report} bytes={artifactBytes} mode={mode} apiUrl={apiUrl} onBytes={setArtifactBytes} />}
+          {report && tab === "hex" && <HexView key={report.artifact.id} report={report} bytes={artifactBytes} mode={mode} apiUrl={apiUrl} onBytes={setArtifactBytes} />}
           {report && (tab === "manifest" || tab === "dotnet" || tab === "signatures") && <FactsView report={report} mode={mode} />}
           {report && tab === "disassembly" && mode === "API" && <DisassemblyView report={report} apiUrl={apiUrl} />}
-          {report && tab === "decompile" && mode === "API" && <DecompileView report={report} apiUrl={apiUrl} />}
-          {report && tab === "diff" && mode === "API" && <DiffView report={report} apiUrl={apiUrl} />}
+          {report && tab === "decompile" && mode === "API" && <DecompileView key={report.artifact.id} report={report} apiUrl={apiUrl} />}
+          {report && tab === "diff" && mode === "API" && <DiffView key={report.artifact.id} report={report} apiUrl={apiUrl} />}
           {tab === "engines" && <EnginesView apiUrl={apiUrl} health={health} />}
           {tab === "settings" && (
             <SettingsView
