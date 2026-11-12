@@ -332,12 +332,8 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/DisassemblyPage"
-        "501":
-          description: Not implemented yet
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ErrorEnvelope"
+        "400":
+          $ref: "#/components/responses/BadRequest"
 
   /api/reports/{reportId}/decompile:
     post:
@@ -414,7 +410,7 @@ paths:
   /api/diffs:
     post:
       tags: [diffs]
-      summary: Compare two existing reports (M4)
+      summary: Compare two stored reports (avero.diff/v1)
       requestBody:
         required: true
         content:
@@ -435,12 +431,8 @@ paths:
               schema:
                 type: object
                 additionalProperties: true
-        "501":
-          description: Not implemented yet
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ErrorEnvelope"
+        "400":
+          $ref: "#/components/responses/BadRequest"
 
   /api/engines:
     get:

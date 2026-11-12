@@ -397,10 +397,15 @@ Returns `items[]` with `address`, `bytes_hex`, `mnemonic`, `operands`, `size`, `
 - **Acceptance**: file mode explains engines are read-only/CLI-managed; installed state
   matches API; license shown for every engine.
 
-### 6.17 Diff (M4 placeholder)
+### 6.17 Diff (API implemented, M4 UI)
 
-- Show a placeholder explaining the future feature (compare two reports: changed findings,
-  functions, signatures, sections). Do not fabricate data.
+- `POST /api/diffs` returns `avero.diff/v1`: artifact ids/sizes/kinds, findings
+  added/removed/unchanged, sections/imports/exports/signature-rule changes, metadata changes
+  and `size_delta`.
+- **Layout**: two report pickers, summary (size delta, finding counts), tabs for Findings /
+  Sections / Imports / Exports / Signatures / Metadata; changed rows highlighted; no patching.
+- **States**: missing report → error panel with "scan both artifacts first"; identical
+  reports → empty diff. Do not fabricate data when the API is unavailable.
 
 ### 6.18 Settings
 

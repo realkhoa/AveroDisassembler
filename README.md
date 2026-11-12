@@ -6,7 +6,7 @@
 [![Release](https://img.shields.io/github/v/release/realkhoa/AveroDisassembler?sort=semver)](https://github.com/realkhoa/AveroDisassembler/releases)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
-**Status: v0.10.0 — Rust core + local API + Ghidra decompile + rizin disassembly + APK signatures/resources + IL2CPP metadata dump** (P0/P1/P2/P3). Static triage and
+**Status: v0.11.0 — Rust core + local API + Ghidra decompile + rizin disassembly + APK signatures/resources + IL2CPP metadata dump + report diff** (P0/P1/P2/P3/P4). Static triage and
 analysis for PE, .NET, ELF, Mach-O, APK (including the **binary AndroidManifest.xml**), Unity
 IL2CPP, Godot PCK, firmware containers, scripts and WASM. Includes a **native signature
 engine** (YARA subset), an **engine installer** (ILSpyCmd, rizin, Ghidra, jadx),
@@ -29,14 +29,14 @@ The first prototype was written in Python and worked, but startup took ~450 ms, 
 venv. The Rust rewrite is a single 3.4 MB executable that scans the same file in ~111 ms
 (cold) / ~20 ms (warm), with no runtime to install.
 
-| Task | Python prototype | Rust 0.2 | **Rust 0.10** | Speed-up |
+| Task | Python prototype | Rust 0.2 | **Rust 0.11** | Speed-up |
 |---|---|---|---|---|
 | `scan notepad.exe` (352 KB, cold) | 1,980 ms | 100 ms | **111 ms** | ~18× |
 | `scan notepad.exe` (warm) | 1,070 ms | 18 ms | **20 ms** | ~53× |
 | `scan APK` (with AXML parsing) | — | — | **38 ms** | — |
 | CLI startup | ~450 ms | 13 ms | **11 ms** | ~40× |
-| Distribution | venv + Python (~100 MB) | 2.74 MB | **4.08 MB** | — |
-| Tests | 40 (pytest) | 38 | **73** | — |
+| Distribution | venv + Python (~100 MB) | 2.74 MB | **4.12 MB** | — |
+| Tests | 40 (pytest) | 38 | **74** | — |
 
 > Measurements include ~10–13 ms of PowerShell process overhead; the binary itself is faster.
 
@@ -152,9 +152,9 @@ flows through `Fragment` → `Report`.
 
 ## CI / releases
 
-`.github/workflows/release.yml` builds and tests on `windows-latest` for every push and
-pull request. Pushing a `v*` tag creates a GitHub Release with the zipped executable and a
-SHA-256 checksum. Local builds use `scripts/build.bat` (it calls `vcvars64.bat` first).
+`.github/workflows/release.yml` builds and tests on a **Windows + Linux + macOS** matrix for every push and
+pull request. Pushing a `v*` tag creates a GitHub Release with per-platform archives (`.zip` for Windows, `.tar.gz` for
+Linux/macOS) and SHA-256 checksums. Local builds use `scripts/build.bat` (it calls `vcvars64.bat` first).
 
 ## Ethics & legal
 

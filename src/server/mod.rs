@@ -195,10 +195,6 @@ fn bad_request(message: &str) -> ApiResult {
     ApiResult::Json(400, error_json("bad_request", message))
 }
 
-fn not_implemented(message: &str) -> ApiResult {
-    ApiResult::Json(501, error_json("not_implemented", message))
-}
-
 fn page_limit(request: &HttpRequest) -> usize {
     request
         .query_usize("limit")
@@ -850,6 +846,153 @@ fn start_ghidra_decompile(
     ApiResult::Json(202, json!({"job_id": job_id, "status": "queued"}))
 }
 
+fn finding_value(finding: &crate::ir::Finding) -> Value {
+    serde_json::to_value(finding).unwrap_or(Value::Null)
+}
+
+fn diff_reports(old: &crate::ir::Report, new: &crate::ir::Report) -> Value {
+    use std::collections::BTreeSet;
+
+    let old_findings: BTreeSet<&str> = old
+        .findings
+        .iter()
+        .map(|finding| finding.id.as_str())
+        .collect();
+    let new_findings: BTreeSet<&str> = new
+        .findings
+        .iter()
+        .map(|finding| finding.id.as_str())
+        .collect();
+    let added: Vec<Value> = new
+        .findings
+        .iter()
+        .filter(|finding| !old_findings.contains(finding.id.as_str()))
+        .map(finding_value)
+        .collect();
+    let removed: Vec<Value> = old
+        .findings
+        .iter()
+        .filter(|finding| !new_findings.contains(finding.id.as_str()))
+        .map(finding_value)
+        .collect();
+    let unchanged = new.findings.len().saturating_sub(added.len());
+    let added_count = added.len();
+    let removed_count = removed.len();
+
+    let section_names = |report: &crate::ir::Report| -> BTreeSet<String> {
+        report
+            .artifact
+            .sections
+            .iter()
+            .map(|section| section.name.clone())
+            .collect()
+    };
+    let old_sections = section_names(old);
+    let new_sections = section_names(new);
+    let added_sections: Vec<&String> = new_sections.difference(&old_sections).collect();
+    let removed_sections: Vec<&String> = old_sections.difference(&new_sections).collect();
+
+    let import_key = |import: &crate::ir::Import| {
+        format!(
+            "{}!{}",
+            import.library,
+            import.name.clone().unwrap_or_default()
+        )
+    };
+    let old_imports: BTreeSet<String> = old.artifact.imports.iter().map(import_key).collect();
+    let new_imports: BTreeSet<String> = new.artifact.imports.iter().map(import_key).collect();
+    let added_imports: Vec<&String> = new_imports.difference(&old_imports).collect();
+    let removed_imports: Vec<&String> = old_imports.difference(&new_imports).collect();
+
+    let export_name = |export: &crate::ir::Export| export.name.clone().unwrap_or_default();
+    let old_exports: BTreeSet<String> = old.artifact.exports.iter().map(export_name).collect();
+    let new_exports: BTreeSet<String> = new.artifact.exports.iter().map(export_name).collect();
+    let added_exports: Vec<&String> = new_exports.difference(&old_exports).collect();
+    let removed_exports: Vec<&String> = old_exports.difference(&new_exports).collect();
+
+    let rule_names = |report: &crate::ir::Report| -> BTreeSet<String> {
+        report
+            .facts
+            .get("signatures.rules")
+            .and_then(|facts| facts.get("matched_rules"))
+            .and_then(Value::as_array)
+            .map(|rules| {
+                rules
+                    .iter()
+                    .filter_map(|rule| {
+                        rule.as_str().map(str::to_string).or_else(|| {
+                            rule.get("rule").and_then(Value::as_str).map(str::to_string)
+                        })
+                    })
+                    .collect()
+            })
+            .unwrap_or_default()
+    };
+    let old_rules = rule_names(old);
+    let new_rules = rule_names(new);
+    let added_rules: Vec<&String> = new_rules.difference(&old_rules).collect();
+    let removed_rules: Vec<&String> = old_rules.difference(&new_rules).collect();
+
+    let mut changed_metadata = Vec::new();
+    let mut keys: BTreeSet<&String> = old.artifact.metadata.keys().collect();
+    keys.extend(new.artifact.metadata.keys());
+    for key in keys {
+        let old_value = old.artifact.metadata.get(key);
+        let new_value = new.artifact.metadata.get(key);
+        if old_value != new_value {
+            changed_metadata.push(json!({
+                "key": key,
+                "old": old_value,
+                "new": new_value,
+            }));
+        }
+    }
+
+    json!({
+        "schema_id": "avero.diff/v1",
+        "old": {
+            "report_id": old.artifact.id,
+            "size": old.artifact.size,
+            "findings": old.findings.len(),
+            "kinds": old.artifact.kinds,
+        },
+        "new": {
+            "report_id": new.artifact.id,
+            "size": new.artifact.size,
+            "findings": new.findings.len(),
+            "kinds": new.artifact.kinds,
+        },
+        "size_delta": new.artifact.size as i64 - old.artifact.size as i64,
+        "findings": {
+            "added": added,
+            "removed": removed,
+            "unchanged": unchanged,
+            "counts": { "added": added_count, "removed": removed_count, "unchanged": unchanged },
+        },
+        "sections": { "added": added_sections, "removed": removed_sections },
+        "imports": { "added": added_imports, "removed": removed_imports },
+        "exports": { "added": added_exports, "removed": removed_exports },
+        "signatures": { "added": added_rules, "removed": removed_rules },
+        "metadata": { "changed": changed_metadata },
+        "kinds": { "old": old.artifact.kinds, "new": new.artifact.kinds },
+    })
+}
+
+fn handle_diffs(state: &AppState, request: &HttpRequest) -> ApiResult {
+    let body: Value = match serde_json::from_slice(&request.body) {
+        Ok(value) => value,
+        Err(error) => return bad_request(&format!("invalid JSON body: {error}")),
+    };
+    let old_id = body.get("old_report").and_then(Value::as_str);
+    let new_id = body.get("new_report").and_then(Value::as_str);
+    let (Some(old_id), Some(new_id)) = (old_id, new_id) else {
+        return bad_request("old_report and new_report are required");
+    };
+    let (Some(old), Some(new)) = (state.get_report(old_id), state.get_report(new_id)) else {
+        return not_found("report not found; scan both artifacts first");
+    };
+    ApiResult::Json(200, diff_reports(&old.report, &new.report))
+}
 fn handle_engine_install(state: &Arc<AppState>, engine_id: &str) -> ApiResult {
     let manifests = engine::load_manifests();
     let Some(manifest) = manifests.iter().find(|manifest| manifest.id == engine_id) else {
@@ -938,7 +1081,7 @@ pub fn handle_request(state: &Arc<AppState>, request: &HttpRequest) -> ApiResult
                 handle_decompile(state, request, report_id)
             }
             ["api", "engines", engine_id, "install"] => handle_engine_install(state, engine_id),
-            ["api", "diffs"] => not_implemented("diff is not implemented yet"),
+            ["api", "diffs"] => handle_diffs(state, request),
             _ => not_found("route not found"),
         },
         _ => ApiResult::Json(405, error_json("method_not_allowed", "unsupported method")),
@@ -1277,6 +1420,44 @@ mod tests {
         assert_eq!(path, "/api/reports/abc/strings");
         assert_eq!(query.get("q").map(String::as_str), Some("hello world"));
         assert_eq!(query.get("limit").map(String::as_str), Some("5"));
+    }
+
+    #[test]
+    fn diff_endpoint_compares_reports() {
+        const SIGNED_APK: &[u8] = include_bytes!("../../tests/fixtures/sample-signed.apk");
+        let (state, directory) = test_state();
+        let store = |bytes: &[u8]| -> String {
+            let mut artifact = probe::probe_bytes(bytes, None);
+            let report = analyze(&mut artifact, bytes, &ScanOptions::default());
+            state
+                .store_report(report, bytes)
+                .expect("store report")
+                .report
+                .artifact
+                .id
+                .clone()
+        };
+        let old_id = store(SAMPLE_APK);
+        let new_id = store(SIGNED_APK);
+        let mut headers = BTreeMap::new();
+        headers.insert("content-type".to_string(), "application/json".to_string());
+        let request = HttpRequest {
+            method: "POST".to_string(),
+            path: "/api/diffs".to_string(),
+            query: BTreeMap::new(),
+            headers,
+            body: serde_json::to_vec(&json!({"old_report": old_id, "new_report": new_id}))
+                .expect("body"),
+        };
+        match handle_request(&state, &request) {
+            ApiResult::Json(200, value) => {
+                assert_eq!(value["schema_id"], "avero.diff/v1");
+                assert!(value["findings"]["counts"]["added"].as_u64().unwrap_or(0) > 0);
+                assert!(value["size_delta"].as_i64().unwrap_or(0) > 0);
+            }
+            _ => panic!("diff request failed"),
+        }
+        let _ = std::fs::remove_dir_all(directory);
     }
 
     #[test]

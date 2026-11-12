@@ -18,26 +18,47 @@ env:
   CARGO_TERM_COLOR: always
 
 jobs:
-  windows:
-    name: Windows x64 (build, test, package)
-    runs-on: windows-latest
+  build:
+    name: ${{ matrix.name }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: windows-latest
+            name: Windows x64
+            artifact: avero-windows-x64
+            target: x86_64-pc-windows-msvc
+            archive: zip
+          - os: ubuntu-latest
+            name: Linux x64
+            artifact: avero-linux-x64
+            target: x86_64-unknown-linux-gnu
+            archive: tar.gz
+          - os: macos-latest
+            name: macOS arm64
+            artifact: avero-macos-arm64
+            target: aarch64-apple-darwin
+            archive: tar.gz
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Set up MSVC environment
+      - name: Set up MSVC environment (Windows)
+        if: runner.os == 'Windows'
         uses: ilammy/msvc-dev-cmd@v1
 
       - name: Set up Rust
         uses: dtolnay/rust-toolchain@stable
         with:
           components: rustfmt
-          targets: x86_64-pc-windows-msvc
+          targets: ${{ matrix.target }}
 
       - name: Cache Rust build
         uses: Swatinem/rust-cache@v2
         with:
           workspaces: ". -> target"
+          key: ${{ matrix.target }}
 
       - name: Check formatting
         run: cargo fmt --all -- --check
@@ -49,31 +70,57 @@ jobs:
         run: cargo test --locked
 
       - name: Build release binary
-        run: cargo build --release --locked
+        run: cargo build --release --locked --target ${{ matrix.target }}
 
-      - name: Package release artifacts
+      - name: Package release artifacts (Windows)
+        if: runner.os == 'Windows'
         shell: pwsh
         run: |
           New-Item -ItemType Directory -Force dist | Out-Null
-          Copy-Item target/release/avero.exe dist/avero.exe
-          $hash = (Get-FileHash dist/avero.exe -Algorithm SHA256).Hash.ToLower()
-          "$hash  avero.exe" | Set-Content -NoNewline dist/avero.exe.sha256
-          Compress-Archive -Path dist/avero.exe -DestinationPath dist/avero-windows-x64.zip -Force
+          Copy-Item "target/${{ matrix.target }}/release/avero.exe" dist/avero.exe
+          Compress-Archive -Path dist/avero.exe -DestinationPath "dist/${{ matrix.artifact }}.zip" -Force
+          $hash = (Get-FileHash "dist/${{ matrix.artifact }}.zip" -Algorithm SHA256).Hash.ToLower()
+          "$hash  ${{ matrix.artifact }}.zip" | Set-Content -NoNewline "dist/${{ matrix.artifact }}.sha256"
           Get-ChildItem dist | Select-Object Name, Length
+
+      - name: Package release artifacts (Unix)
+        if: runner.os != 'Windows'
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p dist
+          cp "target/${{ matrix.target }}/release/avero" dist/avero
+          chmod +x dist/avero
+          tar -czf "dist/${{ matrix.artifact }}.tar.gz" -C dist avero
+          # Normalize the checksum file so it contains only the relative archive name.
+          (cd dist && sha256sum "${{ matrix.artifact }}.tar.gz" > "${{ matrix.artifact }}.sha256")
+          ls -l dist
 
       - name: Upload build artifact
         uses: actions/upload-artifact@v4
         with:
-          name: avero-windows-x64
+          name: ${{ matrix.artifact }}
           path: dist/*
           if-no-files-found: error
 
-      - name: Publish GitHub Release
-        if: startsWith(github.ref, 'refs/tags/v')
+  release:
+    name: Publish GitHub Release
+    needs: build
+    if: startsWith(github.ref, 'refs/tags/v')
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download all platform artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: release
+          merge-multiple: true
+
+      - name: List release files
+        run: ls -l release
+
+      - name: Publish release
         uses: softprops/action-gh-release@v2
         with:
-          files: |
-            dist/avero-windows-x64.zip
-            dist/avero.exe.sha256
+          files: release/*
           generate_release_notes: true
           fail_on_unmatched_files: true
