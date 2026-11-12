@@ -124,3 +124,18 @@ mod tests {
         );
     }
 }
+
+/// Build a child process command that never flashes a console window on Windows.
+///
+/// The desktop workbench is a GUI process; spawning curl/tar/dotnet/rizin without
+/// `CREATE_NO_WINDOW` makes Windows open visible console windows for every operation.
+pub fn command(program: impl AsRef<std::ffi::OsStr>) -> std::process::Command {
+    let mut command = std::process::Command::new(program);
+    #[cfg(windows)]
+    {
+        use std::os::windows::process::CommandExt;
+        const CREATE_NO_WINDOW: u32 = 0x0800_0000;
+        command.creation_flags(CREATE_NO_WINDOW);
+    }
+    command
+}

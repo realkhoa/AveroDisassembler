@@ -63,12 +63,12 @@ fn build_headless_command(launcher: &Path, args: &[String]) -> Command {
     if is_windows_script {
         // .bat/.cmd launchers must run through cmd; `call` handles quoted paths safely
         // (avoids the nested-quote pitfalls of passing a pre-built command line).
-        let mut command = Command::new("cmd");
+        let mut command = crate::util::command("cmd");
         command.arg("/c").arg("call").arg(launcher);
         command.args(args);
         command
     } else {
-        let mut command = Command::new(launcher);
+        let mut command = crate::util::command(launcher);
         command.args(args);
         command
     }

@@ -1,11 +1,10 @@
-//! rizin disassembly adapter (`avero disasm`).
+﻿//! rizin disassembly adapter (`avero disasm`).
 //!
 //! Uses the installed rizin sidecar (LGPL-3.0, never linked) in JSON mode:
 //! `rizin -q -c "s <addr>" -c "pdj <count>" <file>`.
 //! `pdj` emits JSON without needing `-j` on the rizin command line.
 
 use std::path::{Path, PathBuf};
-use std::process::Command;
 
 use anyhow::{anyhow, Context, Result};
 use serde::{Deserialize, Serialize};
@@ -126,7 +125,7 @@ pub fn disassemble_file(path: &Path, options: &DisasmOptions) -> Result<Disassem
         .address
         .map(|value| format!("0x{value:x}"))
         .unwrap_or_else(|| "entry0".to_string());
-    let mut command = Command::new(&rizin);
+    let mut command = crate::util::command(&rizin);
     command.arg("-q");
     command.arg("-c").arg("e scr.color=0");
     if options.analyze {

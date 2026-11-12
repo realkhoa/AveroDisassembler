@@ -225,11 +225,11 @@ pub fn command_for_binary(path: &Path) -> Command {
         .unwrap_or("")
         .to_ascii_lowercase();
     if extension == "cmd" || extension == "bat" {
-        let mut command = Command::new("cmd");
+        let mut command = crate::util::command("cmd");
         command.arg("/c").arg(path);
         command
     } else {
-        Command::new(path)
+        crate::util::command(path)
     }
 }
 
@@ -362,7 +362,7 @@ fn fetch_archive(
         manifest.id, manifest.version
     );
     let result = run_checked(
-        Command::new("curl").args([
+        crate::util::command("curl").args([
             "-L",
             "--fail",
             "--retry",
@@ -404,7 +404,7 @@ fn extract_and_place(archive: &Path, install_dir: &Path) -> Result<()> {
     ));
     std::fs::create_dir_all(&temp)?;
     run_checked(
-        Command::new("tar").args([
+        crate::util::command("tar").args([
             "-xf",
             &archive.to_string_lossy(),
             "-C",
@@ -492,7 +492,7 @@ fn install_dotnet_tool(manifest: &EngineManifest, install_dir: &Path) -> Result<
         .unwrap_or_else(|| manifest.version.clone());
     std::fs::create_dir_all(install_dir)?;
     run_checked(
-        Command::new("dotnet").args([
+        crate::util::command("dotnet").args([
             "tool",
             "install",
             "--tool-path",
