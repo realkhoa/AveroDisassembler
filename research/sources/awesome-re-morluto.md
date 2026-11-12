@@ -1,0 +1,401 @@
+# Awesome Reverse Engineering [![Awesome](https://awesome.re/badge.svg)](https://awesome.re)
+
+> **Featured: [REA](https://github.com/morluto/rea)** — Agent-oriented reverse-engineering tools, from application behavior to native binaries. By the creators of awesome-reverse-engineering.
+
+[![REA — Reverse Engineer Anything](.github/rea-social-preview.png)](https://github.com/morluto/rea)
+
+A curated starting point for understanding binaries, applications, firmware, file formats, and protocols.
+
+Find a tool by the work you need to do. Each entry describes its purpose; commercial tools are marked **commercial**. This is an initial selection, open to additions and corrections.
+
+## Start here
+
+| Your task | Start with |
+| --- | --- |
+| Learn assembly and reversing fundamentals | [Learning](#learning) |
+| Identify an executable and its capabilities | [File identification and triage](#file-identification-and-triage) |
+| Read native code or step through it | [Native analysis](#native-analysis) and [Debuggers](#debuggers) |
+| Trace calls or instrument a running program | [Dynamic instrumentation and tracing](#dynamic-instrumentation-and-tracing) |
+| Bypass anti-debugging, unpack or rebuild imports | [Deobfuscation and anti-analysis](#deobfuscation-and-anti-analysis) |
+| Examine a suspicious file, process, or memory image | [Malware analysis](#malware-analysis) |
+| Inspect an APK, .NET assembly, or Java program | [Android and managed code](#android-and-managed-code) |
+| Inspect an iOS app, macOS binary, or Apple firmware | [iOS and macOS](#ios-and-macos) |
+| Unpack a Python, Go, Flutter, or Hermes binary | [Language runtimes and packagers](#language-runtimes-and-packagers) |
+| Understand browser behavior or an undocumented protocol | [Web and protocols](#web-and-protocols) |
+| Extract firmware or inspect a binary format | [Firmware and hardware](#firmware-and-hardware) and [File formats](#file-formats) |
+| Reconstruct game memory structures, assets, or bytecode | [Game reverse engineering](#game-reverse-engineering) |
+| Compare builds or audit binary diffs | [Binary diffing and patch analysis](#binary-diffing-and-patch-analysis) |
+| Solve constraints, explore states, or lift semantics | [Symbolic execution and formal analysis](#symbolic-execution-and-formal-analysis) and [Instruction lifting and semantics](#instruction-lifting-and-semantics) |
+| Accelerate an investigation with AI agents | [AI-assisted analysis](#ai-assisted-analysis) |
+
+## Contents
+
+- [Learning](#learning)
+  - [Books](#books)
+- [File identification and triage](#file-identification-and-triage)
+- [Native analysis](#native-analysis)
+- [Debuggers](#debuggers)
+- [Dynamic instrumentation and tracing](#dynamic-instrumentation-and-tracing)
+- [Deobfuscation and anti-analysis](#deobfuscation-and-anti-analysis)
+- [Malware analysis](#malware-analysis)
+- [Android and managed code](#android-and-managed-code)
+- [iOS and macOS](#ios-and-macos)
+- [Language runtimes and packagers](#language-runtimes-and-packagers)
+- [Web and protocols](#web-and-protocols)
+- [Firmware and hardware](#firmware-and-hardware)
+- [File formats](#file-formats)
+- [Game reverse engineering](#game-reverse-engineering)
+- [Binary diffing and patch analysis](#binary-diffing-and-patch-analysis)
+- [Symbolic execution and formal analysis](#symbolic-execution-and-formal-analysis)
+- [Instruction lifting and semantics](#instruction-lifting-and-semantics)
+- [AI-assisted analysis](#ai-assisted-analysis)
+- [Practice and communities](#practice-and-communities)
+- [Related lists](#related-lists)
+- [Contributing and maintenance](#contributing-and-maintenance)
+- [License](#license)
+
+## Learning
+
+![An open technical manual with circuit diagrams and an orange bookmark](.github/section-art/learning.png)
+
+- [Azeria Labs](https://azeria-labs.com/writing-arm-assembly-part-1/) - ARM assembly tutorials with exercises for learning registers, memory, and calling conventions.
+- [Compiler Explorer](https://godbolt.org/) - Compiles code in the browser with many compilers and shows the generated assembly, for seeing how source constructs and optimization levels translate to machine code.
+- [Corkami](https://github.com/corkami/pics) - Visual references and posters explaining binary formats and file structures, including executable-format layouts.
+- [Corkami PoCs](https://github.com/corkami/pocs) - Minimal and unusual executable and document samples for studying file-format edge cases and parser behavior.
+- [Hextree](https://www.hextree.io/) - Hands-on mobile and hardware reverse-engineering courses and interactive labs; **Commercial**, with some free content.
+- [Malware Analysis Training](https://github.com/hasherezade/malware_training_vol1) - Windows malware-analysis course with programming, Windows-internals, and reversing exercises; labs need a suitable Windows analysis environment.
+- [Malware Unicorn RE101](https://malwareunicorn.org/workshops/re101.html) - Introductory Windows malware-reversing workshop covering x86 assembly, triage, and debugging; its VM-based lab instructions use older software images.
+- [Nightmare](https://guyinatuxedo.github.io/) - Course built from annotated CTF challenges, progressing from assembly and reversing basics to binary exploitation.
+- [OpenSecurityTraining2](https://ost2.fyi/) - Structured courses in assembly, architecture, debugging, and reverse engineering.
+- [pwn.college](https://pwn.college/) - Free courses with hands-on challenges in Linux, assembly, reverse engineering, and binary exploitation, run in a browser-accessible environment.
+- [Reverse Engineering by Kevin Thomas](https://github.com/mytechnotalent/Reverse-Engineering) - Annotated assembly and reverse-engineering lessons across x86, x64, ARM, AVR, and RISC-V, with lesson-specific toolchain and hardware requirements.
+- [Reverse Engineering for Beginners](https://beginners.re/) - Free book connecting compiled C and C++ examples to assembly across several architectures.
+- [RPISEC Modern Binary Exploitation](https://github.com/RPISEC/MBE) - Course materials and labs covering reverse engineering, memory corruption, and exploitation; no commits since December 2021, so labs may need older toolchains.
+
+### Books
+
+<!-- TODO: section art for this heading. Add .github/section-art/books.png (320x213, 8-bit palette PNG in the style of the existing illustrations) and reference it here with alt text. -->
+
+- [Hacking the Xbox](https://www.bunniestudios.com/blog/2013/releasing-free-pdf-of-hacking-the-xbox-in-honor-of-aaron-swartz/) - Introduction to hardware reverse engineering through the original Xbox's security design; free PDF edition released by the author.
+- [Practical Binary Analysis](https://nostarch.com/binaryanalysis) - Covers ELF and PE internals, disassembly, binary instrumentation, taint analysis, and symbolic execution, with tools built in the exercises.
+- [Practical Malware Analysis](https://nostarch.com/malware) - Hands-on introduction to static and dynamic Windows malware analysis with lab exercises; published in 2012, so some tooling chapters are dated.
+- [The Ghidra Book](https://nostarch.com/ghidra-book-2e) - Guide to Ghidra's disassembler, decompiler, scripting, and extension APIs; the 2026 second edition covers BSim and PyGhidra.
+
+## File identification and triage
+
+![Unknown files sorted by their format markers in an inspection tray](.github/section-art/file-triage.png)
+
+- [capa](https://github.com/mandiant/capa) - Identifies capabilities in executable files using rules over static or dynamic analysis results.
+- [checksec](https://github.com/slimm609/checksec) - Checks ELF security properties such as PIE, RELRO, stack canaries, and non-executable stacks; mitigation flags are not a vulnerability verdict.
+- [Detect It Easy](https://github.com/horsicq/Detect-It-Easy) - Identifies executable formats, compilers, packers, and other file characteristics.
+- [FLOSS](https://github.com/mandiant/flare-floss) - Recovers obfuscated strings, including strings constructed on the stack.
+- [hexvero](https://github.com/maximilianfeix/hexvero) - Statically triages Electron archives and JavaScript bundles for IPC channels, preload bridges, and window settings, plus ELF/Mach-O/PE imports and hardening; its CLI, MCP server, and local web UI require Node.js 22.12+, and pattern-based JavaScript analysis can miss indirect code.
+- [LIEF](https://github.com/lief-project/LIEF) - Parses and modifies executable formats such as PE, ELF, and Mach-O from code.
+- [Malcat](https://malcat.fr/) - Hex editor and disassembler for triaging unknown files, with 50+ format parsers, embedded-file extraction, YARA scanning, and Python scripting. **Commercial**, with a free Lite edition for non-professional use.
+- [PE-bear](https://github.com/hasherezade/pe-bear) - Graphical PE viewer and editor for a quick first look at headers, sections, imports, and resources, including malformed files.
+- [pestudio](https://www.winitor.com/) - Flags suspicious imports, strings, resources, and other indicators in Windows executables for initial assessment. **Commercial**, with a free basic edition for private use.
+
+## Native analysis
+
+![A binary file inspected through a magnifying glass](.github/section-art/binary-analysis.png)
+
+- [Binary Ninja](https://binary.ninja/) - Interactive disassembler and decompiler with intermediate representations and scripting APIs. **Commercial**, with a free edition.
+- [Cutter](https://github.com/rizinorg/cutter) - Graphical reverse-engineering interface built on Rizin.
+- [Decompiler Explorer](https://dogbolt.org/) - Web service that runs an uploaded binary through several decompilers and shows their output side by side.
+- [Ghidra](https://github.com/NationalSecurityAgency/ghidra) - Disassembly, decompilation, scripting, and headless analysis for native binaries.
+- [IDA](https://hex-rays.com/ida-pro) - Interactive disassembler and decompiler with processor modules and a plugin ecosystem. **Commercial**, with a free edition.
+- [radare2](https://github.com/radareorg/radare2) - Command-line toolkit for disassembly, binary inspection, debugging, and scripting.
+- [REDasm](https://github.com/redasm-dev/redasm) - Native disassembler and analysis GUI with legacy-format support; Windows and Linux are the primary tested hosts, while other platform builds have lower support tiers.
+- [RetDec](https://github.com/avast/retdec) - Retargetable LLVM-based decompiler for ELF, PE, Mach-O, and other formats; in limited maintenance mode, with little new development.
+- [rev.ng](https://github.com/revng/revng) - LLVM- and QEMU-based binary-analysis framework and decompiler for inspecting and transforming native code; source builds need its documented toolchain.
+- [Rizin](https://github.com/rizinorg/rizin) - Reverse-engineering framework with command-line analysis and reusable libraries.
+- [Rubber Room](https://binarybacktrace.com/tools/rubber_room) - Browser PE workbench with x86-64 disassembly, partial Win32 API emulation and experimental C-like pseudocode that may omit program logic; alpha.
+
+## Debuggers
+
+![A debugger tracing execution to an orange breakpoint](.github/section-art/debugging.png)
+
+- [GDB](https://www.sourceware.org/gdb/) - Native debugger with scripting and remote-debugging support.
+- [GEF](https://github.com/hugsy/gef) - Single-file GDB extension that adds context views, heap inspection, and commands for exploit development and binary analysis.
+- [LLDB](https://lldb.llvm.org/) - LLVM debugger for native programs, including macOS and iOS development workflows.
+- [pwndbg](https://github.com/pwndbg/pwndbg) - Debugger extensions for inspecting memory, assembly, and runtime state during binary analysis.
+- [rr](https://github.com/rr-debugger/rr) - Records and replays Linux process execution for repeatable debugging.
+- [WinDbg](https://learn.microsoft.com/en-us/windows-hardware/drivers/debugger/) - Microsoft debugger for Windows user-mode and kernel debugging, crash dump analysis, and Time Travel Debugging; version 1.2610.1001.0 and later include the official [WinDbg MCP](https://learn.microsoft.com/en-us/windows-hardware/drivers/debuggercmds/set-up-windbg-mcp) server.
+- [x64dbg](https://github.com/x64dbg/x64dbg) - Windows user-mode debugger for inspecting native executables and libraries.
+
+## Dynamic instrumentation and tracing
+
+<!-- TODO: section art for this heading. Add .github/section-art/instrumentation.png (320x213, 8-bit palette PNG in the style of the existing illustrations) and reference it here with alt text. -->
+
+- [bpftrace](https://github.com/bpftrace/bpftrace) - Linux eBPF tracing language for observing kernel and user-space functions; available probes and permissions depend on the host kernel.
+- [DynamoRIO](https://github.com/DynamoRIO/dynamorio) - Dynamic binary instrumentation platform for building tools that observe or modify instructions at runtime, with bundled tracing and memory-checking tools.
+- [Frida](https://github.com/frida/frida) - Injects scripts into running processes to trace calls, inspect data, and change behavior.
+- [Intel Pin](https://www.intel.com/content/www/us/en/developer/articles/tool/pin-a-dynamic-binary-instrumentation-tool.html) - Dynamic binary instrumentation framework for writing analysis tools for x86 and x86-64 programs on Linux and Windows; closed source, free for any use.
+- [QBDI](https://github.com/QBDI/QBDI) - LLVM-based dynamic binary instrumentation framework for x86, x86-64, ARM, and AArch64, with C, C++, and Python APIs and Frida integration.
+- [r2frida](https://github.com/nowsecure/r2frida) - radare2 plugin for Frida-backed process inspection and instrumentation; requires a compatible radare2 build and a working Frida session with the target.
+- [strace](https://github.com/strace/strace) - Linux system-call tracer for inspecting process I/O, signals, syscall arguments, and return values.
+- [Sysinternals Suite](https://learn.microsoft.com/en-us/sysinternals/) - Microsoft utilities, including Process Monitor, Process Explorer, and Autoruns, for observing process, file, registry, and network activity on Windows.
+- [System Informer](https://github.com/winsiderss/systeminformer) - Windows 10+ process and system inspector for handles, memory, services, and related kernel information; some views require elevated access.
+- [TinyTracer](https://github.com/hasherezade/tiny_tracer) - Intel Pin tool for tracing execution and selected function or API calls; use the documented platform build and a matching Pin kit.
+- [uftrace](https://github.com/namhyung/uftrace) - Linux function-call tracer for C/C++, Rust, and Python, with call graphs and timing data; native-code coverage depends on instrumentation or supported dynamic tracing.
+
+## Deobfuscation and anti-analysis
+
+<!-- TODO: section art for this heading. Add .github/section-art/deobfuscation.png (320x213, 8-bit palette PNG in the style of the existing illustrations) and reference it here with alt text. -->
+
+- [Al-Khaser](https://github.com/ayoubfaouzi/al-khaser) - Windows proof-of-concept suite for exercising anti-debugging, anti-VM, anti-hooking, and other analysis-environment checks.
+- [de4dot](https://github.com/de4dot/de4dot) - .NET deobfuscator and unpacker for assemblies protected by common obfuscators; archived in 2020 and no longer updated.
+- [HollowsHunter](https://github.com/hasherezade/hollows_hunter) - Windows process scanner using PE-sieve to find and dump injected or modified code across running processes; findings require manual investigation.
+- [PE-sieve](https://github.com/hasherezade/pe-sieve) - Scans a running process for injected or modified code, such as hollowed modules, hooks, and shellcode, and dumps what it finds.
+- [Scylla](https://github.com/NtQuery/Scylla) - Windows x86/x64 import-table reconstruction tool for dumped PE files; upstream documents older Windows versions, so current-host compatibility needs checking.
+- [ScyllaHide](https://github.com/x64dbg/ScyllaHide) - Windows x86/x64 user-mode anti-anti-debugging library with x64dbg, OllyDbg, and IDA integrations; debugger and plugin versions must match.
+
+## Malware analysis
+
+<!-- TODO: section art for this heading. Add .github/section-art/malware-analysis.png (320x213, 8-bit palette PNG in the style of the existing illustrations) and reference it here with alt text. -->
+
+Run samples only in isolated, disposable environments, and follow your organization's handling procedures.
+
+- [CAPE Sandbox](https://github.com/kevoreilly/CAPEv2) - Automated sandbox derived from Cuckoo that runs samples in virtual machines and records behavior, unpacked payloads, and malware configurations.
+- [Didier Stevens Suite](https://github.com/DidierStevens/DidierStevensSuite) - Python utilities for inspecting PDF, OLE, scripts, and other suspicious document inputs; dependencies and input support vary by script.
+- [Dumpulator](https://github.com/mrexodia/dumpulator) - Emulates selected user-mode code from Windows minidumps for tasks such as string decryption and unpacking; dump completeness and supported execution context limit what can run.
+- [FakeNet-NG](https://github.com/mandiant/flare-fakenet-ng) - Intercepts traffic and emulates network services for dynamic analysis; supports Windows and selected Linux modes, with platform-specific setup and traffic-redirection privileges.
+- [FLARE-VM](https://github.com/mandiant/flare-vm) - Installation scripts that turn a Windows virtual machine into a malware-analysis and reverse-engineering workstation.
+- [Malduck](https://github.com/CERT-Polska/malduck) - Python library of cryptography, compression, and memory-model helpers with a YARA-driven framework for writing your own malware configuration extractors; it does not ship family extractors.
+- [MemProcFS](https://github.com/ufrisk/MemProcFS) - Exposes memory dumps and live memory as a virtual file system and Python, C, and Rust APIs, with process and forensic views for Windows targets; mounting requires Dokany, FUSE, or macFUSE.
+- [mwemu](https://github.com/mwemuorg/mwemu) - Emulates x86/x64 and AArch64 code for PE, ELF, and Mach-O investigations, with Windows API models and kernel-driver memory-lifetime checks; Windows-focused, with growing Linux/macOS support and Rust 1.95+ required to build the reviewed source.
+- [oletools](https://github.com/decalage2/oletools) - Python tools for inspecting Office, OLE, and RTF files and extracting macros, embedded objects, and other document artifacts.
+- [REMnux](https://remnux.org/) - Linux toolkit for analyzing malicious executables, documents, scripts, and network traffic, available as a virtual machine, container, or installer.
+- [Speakeasy](https://github.com/mandiant/speakeasy) - Windows emulation framework for PE files, drivers, and shellcode that produces API reports within a modeled runtime.
+- [Volatility 3](https://github.com/volatilityfoundation/volatility3) - Memory forensics framework for extracting processes, modules, network connections, and other artifacts from memory images.
+- [YARA](https://github.com/VirusTotal/yara) - Identifies and classifies files with rules over strings, byte patterns, and file properties; in maintenance mode, with YARA-X as its successor.
+- [YARA-X](https://github.com/VirusTotal/yara-x) - Rust-based rule-scanning engine with CLI and language bindings; check its documented differences before migrating YARA rules.
+
+## Android and managed code
+
+![A browser and phone exchanging packets](.github/section-art/apps-protocols.png)
+
+- [Androguard](https://github.com/androguard/androguard) - Python tooling for analyzing Android applications, bytecode, and call relationships.
+- [Apktool](https://github.com/iBotPeaches/Apktool) - Decodes Android resources and Smali code, and rebuilds APKs after edits.
+- [AsmResolver](https://github.com/Washi1337/AsmResolver) - Library for reading, modifying, and rebuilding native and managed PE files, including .NET metadata and application bundles.
+- [CFR](https://github.com/leibnitz27/cfr) - Java class and JAR decompiler for inspecting managed code; requires a Java runtime, and the latest release (0.152, December 2021) omits `sealed`/`permits` from Java 17 class files unless run with `--sealed true`.
+- [dnSpyEx](https://github.com/dnSpyEx/dnSpy) - .NET debugger and assembly editor maintained as a continuation of dnSpy.
+- [ILSpy](https://github.com/icsharpcode/ILSpy) - .NET assembly browser and decompiler with GUI and command-line interfaces.
+- [JADX](https://github.com/skylot/jadx) - Android DEX decompiler with code navigation and search in a graphical interface or CLI.
+- [JEB](https://www.pnfsoftware.com/jeb/) - Android decompiler and analysis platform with edition-dependent native analysis and official MCP capabilities that vary by version; **commercial**.
+- [Medusa](https://github.com/Ch0pin/medusa) - Frida-based modular mobile runtime-analysis framework; documented hosts are Linux and macOS, with limited Windows functionality and target-side instrumentation prerequisites.
+- [MobSF](https://github.com/MobSF/Mobile-Security-Framework-MobSF) - Automated static and dynamic analysis of Android, iOS, and Windows mobile apps, with a web interface and REST API.
+- [OWASP MASTG](https://mas.owasp.org/MASTG/) - Mobile security testing guidance with Android and iOS reverse-engineering techniques.
+- [Recaf](https://github.com/Col-E/Recaf) - Java bytecode analysis and editing environment.
+- [Vineflower](https://github.com/Vineflower/vineflower) - Java decompiler focused on modern language features and readable output; requires Java 17 or newer to run current releases.
+
+## iOS and macOS
+
+<!-- TODO: section art for this heading. Add .github/section-art/ios-macos.png (320x213, 8-bit palette PNG in the style of the existing illustrations) and reference it here with alt text. -->
+
+- [class-dump](https://github.com/nygard/class-dump) - Generates Objective-C headers from Mach-O binaries; unmaintained since 2019 and without Swift support, so `ipsw class-dump` is a maintained alternative.
+- [Hopper](https://www.hopperapp.com/) - macOS disassembler and decompiler with Objective-C and Swift support, LLDB and GDB debugging, and scripting. **Commercial**, with a free demo.
+- [ipsw](https://github.com/blacktop/ipsw) - Command-line toolkit for downloading and examining iOS and macOS firmware, dyld shared caches, kernelcaches, and Mach-O binaries.
+- [LLDB scripts by Derek Selander](https://github.com/DerekSelander/LLDB) - LLDB commands, aliases, and Python helpers for Apple-platform investigations; individual scripts have architecture and debugger-version limits.
+- [objection](https://github.com/sensepost/objection) - Frida-based toolkit for exploring iOS and Android apps at runtime, including class inspection, method hooking, and certificate-pinning bypass.
+- [pymobiledevice3](https://github.com/doronz88/pymobiledevice3) - CLI and Python API for iOS device services, including logs, crash reports, packet capture, and developer tooling with version-dependent tunnel requirements.
+
+## Language runtimes and packagers
+
+<!-- TODO: section art for this heading. Add .github/section-art/language-runtimes.png (320x213, 8-bit palette PNG in the style of the existing illustrations) and reference it here with alt text. -->
+
+- [Blutter](https://github.com/worawit/blutter) - Flutter AOT analysis tool for recent Android arm64 libapp.so files, producing annotated assembly, object-pool dumps, and Frida templates.
+- [GoReSym](https://github.com/mandiant/GoReSym) - Recovers function names, types, and build metadata from Go binaries, including stripped ones.
+- [Heimdall](https://github.com/Jon-Becker/heimdall-rs) - EVM bytecode-analysis toolkit for disassembly, decompilation, and contract inspection; inferred source, types, and signatures require validation.
+- [hermes-dec](https://github.com/P1sec/hermes-dec) - Parses, disassembles, and decompiles React Native Hermes bytecode into register-based pseudo-code with incomplete JavaScript semantics; HBC 98 and 99 load with an unsupported-version warning.
+- [Hermit](https://github.com/xV4L3x/hermit) - Interactive toolkit for inspecting, disassembling, decompiling, and structurally patching React Native Hermes bytecode; supports HBC 94, 95, and 96, with HBC 98 unsupported.
+- [pycdc](https://github.com/zrax/pycdc) - Disassembles and decompiles Python bytecode from `.pyc` files; decompilation of recent Python versions can be incomplete.
+- [pyinstxtractor](https://github.com/extremecoders-re/pyinstxtractor) - Extracts the contents of PyInstaller executables, including the bytecode needed for decompilation; the [pyinstxtractor-ng](https://github.com/pyinstxtractor/pyinstxtractor-ng) fork uses xdis so the host Python need not match the build version and supports PyInstaller archive decryption when the embedded key can be recovered, but neither tool decompiles bytecode.
+- [PyLingual](https://github.com/syssec-utd/pylingual) - Model-assisted CPython 3.6+ bytecode decompiler that recompiles its output and flags mismatched code objects for manual review; requires Python 3.12+ to run and downloads large per-version models.
+- [r2flutter](https://github.com/radareorg/r2flutter) - radare2 plugin and CLI for recovering Dart AOT snapshot metadata from Flutter binaries; requires radare2 6.2.2+, primarily targets AArch64, and depends on snapshot layout.
+- [Redress](https://github.com/goretk/redress) - Recovers compiler metadata, packages, types, and symbols from stripped Go executables; target Go-version compatibility depends on the selected release and GoRE parser.
+- [reFlutter](https://github.com/Impact-I/reFlutter) - Flutter mobile-analysis framework that instruments matching engine builds and produces method or type information; Android/iOS architecture and engine-version support varies.
+- [WhatsABI](https://github.com/shazow/whatsabi) - TypeScript library for inferring Ethereum ABI entries and resolving proxy metadata from bytecode; inferred signatures and types are not original-source recovery.
+
+## Web and protocols
+
+![A browser displaying a network packet trace](.github/section-art/web-protocols.png)
+
+- [boofuzz](https://github.com/jtpereyda/boofuzz) - Python framework for describing a protocol's message fields and sending mutated messages to a target, useful for testing a reconstructed protocol against a live service; crash detection needs a process monitor or restart callback.
+- [Burp Suite](https://portswigger.net/burp) - Intercepting proxy and toolkit for inspecting, replaying, and modifying HTTP and WebSocket traffic. **Commercial**, with a free Community Edition.
+- [Chrome DevTools](https://developer.chrome.com/docs/devtools/) - Browser tools for stepping through JavaScript, inspecting network requests, and examining runtime state.
+- [HTTP Toolkit](https://httptoolkit.com/) - Intercepts and inspects HTTP(S) traffic from browsers, desktop applications, Android devices, and containers with automated interception setup. **Commercial**, with a free open-source edition.
+- [mitmproxy](https://github.com/mitmproxy/mitmproxy) - Intercepts, inspects, and modifies HTTP traffic with interactive tools and Python scripts.
+- [Netzob](https://github.com/netzob/netzob) - Python protocol-inference library for exploring fields, messages, and state models from captures; installation needs native dependencies and the documented Python environment.
+- [Protobuf Decoder](https://github.com/pawitp/protobuf-decoder) - Web application that decodes Protobuf messages without a schema and shows field numbers, wire types, and possible value interpretations.
+- [Scapy](https://github.com/secdev/scapy) - Python packet framework for dissecting and constructing protocols, reading PCAPs, and scripting network experiments.
+- [WABT](https://github.com/WebAssembly/wabt) - WebAssembly utilities for converting, inspecting, validating, and decompiling modules.
+- [wasm-tools](https://github.com/bytecodealliance/wasm-tools) - Bytecode Alliance tools for inspecting, validating, and transforming WebAssembly modules, components, and WIT interfaces.
+- [webcrack](https://github.com/j4k0xb/webcrack) - Deobfuscates JavaScript and unpacks common bundler output to make code easier to inspect.
+- [Wireshark](https://www.wireshark.org/) - Captures and dissects network traffic for protocol investigation.
+
+## Firmware and hardware
+
+![A microcontroller board with cyan traces and an orange debug connector](.github/section-art/firmware-hardware.png)
+
+- [avatar2](https://github.com/avatartwo/avatar2) - Coordinates debuggers, emulators, and physical targets for embedded analysis; each endpoint needs its own compatible backend and any associated hardware.
+- [Binwalk](https://github.com/ReFirmLabs/binwalk) - Identifies embedded files and extracts content from firmware images.
+- [ChipWhisperer](https://github.com/newaetech/chipwhisperer) - Hardware and Python tooling for side-channel power analysis and fault-injection experiments; live capture and glitching require compatible capture and target hardware.
+- [EMBA](https://github.com/e-m-b-a/emba) - Firmware security analyzer that extracts images, runs static and emulation-based checks, and produces reports and SBOMs.
+- [esptool](https://github.com/espressif/esptool) - Serial bootloader utility for reading or flashing Espressif devices, with offline `image-info` inspection of firmware headers, segments, checksums, and SHA-256 hashes; requires Python 3.10+, and 5.6.0 returns exit code 0 for checksum/hash mismatches.
+- [Facedancer](https://github.com/greatscottgadgets/facedancer) - Python USB device-emulation and proxy framework for compatible hardware on GNU/Linux; 3.x does not support legacy scripts and backend capabilities vary.
+- [FACT](https://github.com/fkie-cad/FACT_core) - Linux firmware extraction, analysis, and comparison platform; the native installer has specific distribution and Python requirements, while the separate Docker route is unmaintained.
+- [FirmAE](https://github.com/pr0v3rbs/FirmAE) - Emulates Linux-based router and IP camera firmware for dynamic analysis, using heuristics that make full-system emulation succeed more often.
+- [flashrom](https://www.flashrom.org/) - Reads, writes, and verifies flash chips through supported programmers, for dumping or restoring firmware from hardware.
+- [Glasgow Interface Explorer](https://github.com/GlasgowEmbedded/glasgow) - Programmable hardware interface explorer with applets for probing and interacting with digital buses; requires Glasgow hardware.
+- [HALucinator](https://github.com/halucinator/halucinator) - Firmware-rehosting framework that replaces selected hardware-abstraction-layer calls with models; requires its emulation toolchain and target-specific handlers or configuration.
+- [OFRAK](https://github.com/redballoonsecurity/ofrak) - Framework for unpacking, analyzing, modifying, and repacking binary artifacts.
+- [OpenOCD](https://openocd.org/) - Connects to hardware debug interfaces for on-chip debugging and flash access.
+- [Packetry](https://github.com/greatscottgadgets/packetry) - USB 2.0 protocol analyzer for Cynthion captures and offline PCAP files using the LINKTYPE_USB_2_0 format.
+- [Proxmark3](https://github.com/RfidResearchGroup/proxmark3) - RFID and NFC research client and firmware for compatible Proxmark3 hardware; client, firmware, and device variants need to match.
+- [QEMU](https://www.qemu.org/) - Machine emulator for running firmware and programs built for other architectures, with a GDB stub for debugging.
+- [Renode](https://github.com/renode/renode) - Embedded-system simulator with scriptable platform and peripheral models for repeatable firmware debugging and observation.
+- [ripcord](https://github.com/DavidClawson/ripcord) - Ghidra-based firmware-analysis pipeline producing queryable Parquet tables for DuckDB; requires Ghidra 11.2+ with PyGhidra and Python 3.11+, with optional simulation tooling.
+- [sigrok](https://github.com/sigrokproject) - Signal analysis tools and protocol decoders for logic analyzers and related hardware.
+- [UEFITool](https://github.com/LongSoft/UEFITool) - Parses UEFI firmware structures and extracts or replaces modules.
+- [unblob](https://github.com/onekey-sec/unblob) - Extracts nested archives, compressed data, and filesystem images from firmware and other files.
+- [usb-rea](https://github.com/emirmrkaljevic/usb-rea) - Infers USB protocol fields, counters, checksums, and multi-packet commands from captures of labelled actions, with frame-number evidence, and generates pyusb driver code and Wireshark Lua dissectors; requires Python 3.10+, with usbmon plus dumpcap/tshark on Linux or USBPcap on Windows for capture, and remains alpha without physical-device validation.
+
+## File formats
+
+![A structured file separated into data layers](.github/section-art/file-formats.png)
+
+- [010 Editor](https://www.sweetscape.com/010editor/) - Hex editor with binary templates for inspecting structured files. **Commercial**.
+- [Construct](https://github.com/construct/construct) - Declarative Python library for parsing and building binary formats with composable schemas and validation.
+- [CyberChef](https://github.com/gchq/CyberChef) - Browser-based workbench for decoding, decompressing, and transforming data with exportable recipes.
+- [Hex Fiend](https://github.com/HexFiend/HexFiend) - macOS hex editor for inspecting and editing large binary files, with binary templates and an embeddable framework.
+- [Hex Harbinger](https://binarybacktrace.com/tools/hex_harbinger) - Browser hex editor that overlays structure templates for PE, ELF, Mach-O and ZIP files and highlights the parsed fields; alpha.
+- [Hex Viewer for VS Code](https://github.com/theluckystrike/hex-viewer-vscode) - VS Code 1.90+ binary viewer and editor with paged local-file reads, wildcard byte search, a data inspector and C/Python copy formats; remote files default to a 256 MiB cap, editing is overwrite-only, and structure templates are unavailable.
+- [ImHex](https://github.com/WerWolv/ImHex) - Hex editor with a pattern language for describing and exploring binary structures.
+- [Kaitai Struct](https://kaitai.io/) - Describes binary formats declaratively and generates parsers in multiple languages.
+- [Struct Smith](https://binarybacktrace.com/tools/struct_smith) - Browser editor for Spec binary-format schemas, with a live parse tree, byte highlighting and diagnostics; alpha, with a 64 MiB input limit.
+
+## Game reverse engineering
+
+<!-- TODO: section art for this heading. Add .github/section-art/game-reversing.png (320x213, 8-bit palette PNG in the style of the existing illustrations) and reference it here with alt text. -->
+
+- [AssetRipper](https://github.com/AssetRipper/AssetRipper) - Unity asset-analysis and export tool with version-dependent support and additional paid Premium features.
+- [Cheat Engine](https://github.com/cheat-engine/cheat-engine) - Memory scanner, debugger, and disassembler for finding and changing values in running processes, mainly used for game and application modding.
+- [Cpp2IL](https://github.com/SamboyCoding/Cpp2IL) - Recovers types, methods, and IL from Unity IL2CPP builds into .NET assemblies and other outputs; described by its author as work in progress.
+- [FModel](https://github.com/4sval/FModel) - Windows x64 GUI for inspecting and extracting Unreal Engine game archives and assets; title-specific mappings, versions, or encryption keys may be needed.
+- [GDRE Tools](https://github.com/GDRETools/gdsdecomp) - Recovers Godot projects from exported games, including PCK extraction, GDScript decompilation, and resource conversion.
+- [Il2CppDumper](https://github.com/Perfare/Il2CppDumper) - Restores Unity IL2CPP type and method metadata for use in IDA, Ghidra, and other tools; no commits since July 2024, with Cpp2IL as a maintained alternative.
+- [ReClass.NET](https://github.com/ReClassNET/ReClass.NET) - Interactive process-memory structure editor for Windows and Linux; upstream documents Linux support tested on Ubuntu 18.04, rather than current-distribution validation.
+- [ReversePort](https://github.com/laaielichter/Reverseport) - Game-analysis CLI and MCP server built on REA for engine detection, Godot PCK and Unity bundle inspection, IL2CPP metadata and build diffs, with workflows for agent-written ports; requires a supported Node.js release and a separate local Ghidra, IDA or Hopper installation for native decompilation.
+- [Source 2 Viewer](https://github.com/ValveResourceFormat/ValveResourceFormat) - Parser, decompiler, exporter, and Windows viewer for Valve Source 2 resources and VPK archives; format coverage and export fidelity vary by resource type.
+- [UModel](https://www.gildor.org/en/projects/umodel) - Unreal Engine package viewer and asset exporter for Windows and Linux; game/version compatibility varies, and the official site leaves licensing undetermined.
+- [vgmstream](https://github.com/vgmstream/vgmstream) - Library and command-line tools for decoding proprietary game-audio streams; supported formats, codec dependencies, and player integrations vary.
+
+<a id="diffing-and-analysis-frameworks"></a>
+
+## Binary diffing and patch analysis
+
+![Two binary files compared with a changed block highlighted](.github/section-art/diffing.png)
+
+- [BinDiff](https://github.com/google/bindiff) - Compares disassembled binaries to identify similar functions and changes between builds; inputs come from the [BinExport](https://github.com/google/binexport) exporters for IDA Pro, Ghidra, and Binary Ninja; the current IDA plugin source requires IDA Pro 9.4+, while the 2024 release documents IDA SDK 8.0+ for building that plugin.
+- [Binlex](https://github.com/c3rb3ru5d3d53c/binlex) - Binary-feature analysis framework with CLI and language bindings for similarity and corpus investigation; build and plugin dependencies vary by interface.
+- [Diaphora](https://github.com/joxeankoret/diaphora) - Binary diffing plugin for comparing functions and transferring analysis in IDA.
+- [ghidriff](https://github.com/clearbluejar/ghidriff) - Ghidra-based command-line binary diffing engine with JSON, Markdown, and optional HTML reports; requires compatible Ghidra, PyGhidra, and JDK versions.
+
+## Symbolic execution and formal analysis
+
+<!-- TODO: section art for this heading. Add .github/section-art/symbolic-execution.png (320x213, 8-bit palette PNG in the style of the existing illustrations) and reference it here with alt text. -->
+
+- [angr](https://github.com/angr/angr) - Python framework for symbolic execution and program analysis; [angr-management](https://github.com/angr/angr-management) is its official GUI front end, not a separate analysis engine.
+- [BINSEC](https://github.com/binsec/binsec) - Binary-analysis platform combining symbolic execution, abstract interpretation, and SMT solving; source builds require OCaml and compatible solver/backend dependencies.
+- [flare-emu](https://github.com/mandiant/flare-emu) - Archived Unicorn-based emulation helper for IDA Pro, Rizin, and radare2 scripting; analysis-host APIs and Python bindings must match the archived source.
+- [KLEE](https://github.com/klee/klee) - LLVM-bitcode symbolic-execution engine for generating test inputs and finding assertion violations; requires a compatible compiler/runtime setup and does not imply proof from an incomplete run.
+- [Miasm](https://github.com/cea-sec/miasm) - Python reverse-engineering framework with an intermediate representation, emulation, symbolic execution, and assemblers and disassemblers for several architectures.
+- [PANDA](https://github.com/panda-re/panda) - QEMU-based whole-system record/replay and analysis framework with taint-analysis plugins; analysis depends on supported guest architectures, recordings, and matching plugins.
+- [Qiling](https://github.com/qilingframework/qiling) - Emulates binaries with operating-system services for scripted runtime analysis.
+- [S2E](https://github.com/S2E/s2e) - Selective symbolic-execution platform for analyzing programs across OS boundaries; requires a supported Linux host, the S2E toolchain, and prepared guest images.
+- [Triton](https://github.com/JonathanSalwan/Triton) - Dynamic binary analysis library with symbolic execution, taint analysis, and AST representations of instruction semantics, usable from C++ or Python.
+- [Unicorn](https://github.com/unicorn-engine/unicorn) - CPU emulation library for executing and instrumenting machine code across architectures.
+- [Z3](https://github.com/Z3Prover/z3) - SMT solver with command-line and language APIs for expressing and solving analysis constraints, such as recovering inputs that pass a decompiled check; in the Python API `>>` on bit-vectors is an arithmetic shift (C's unsigned `>>` is `LShR`), and a solver can return unknown.
+
+## Instruction lifting and semantics
+
+<!-- TODO: section art for this heading. Add .github/section-art/lifting.png (320x213, 8-bit palette PNG in the style of the existing illustrations) and reference it here with alt text. -->
+
+- [BAP](https://github.com/BinaryAnalysisPlatform/bap) - Binary-analysis platform for lifting native code into an intermediate language and running analyses; source installation uses OCaml/opam and a compatible LLVM toolchain.
+- [Capstone](https://github.com/capstone-engine/capstone) - Multi-architecture disassembly library for building analysis tools.
+- [Keystone](https://github.com/keystone-engine/keystone) - Multi-architecture assembler library, the counterpart to Capstone, for turning assembly text into machine code when patching binaries or building test inputs; GPL-2.0 with a separate commercial license, and the latest PyPI release (0.9.2, 2020) ships wheels only for x86 and x86-64 hosts.
+- [Remill](https://github.com/lifting-bits/remill) - Library for lifting supported machine instructions into LLVM bitcode; requires compatible LLVM and build dependencies, with Windows support documented as experimental.
+- [Rewynth](https://github.com/nazeeh111/Rewynth) - Experimental ARM64 function recovery for finding return or declared-state mismatches after an edit; requires Python 3.11+ on Linux or macOS and covers only its supported instruction model.
+- [Zydis](https://github.com/zyantific/zydis) - x86/x86-64 instruction decoding and encoding library for building analysis tools; source builds use CMake or the documented Visual Studio project.
+
+## AI-assisted analysis
+
+![A robot assistant examining a binary file](.github/section-art/ai-analysis.png)
+
+Agent integrations expose existing analysis tools or coordinate an investigation. Check the upstream documentation for required software and supported clients; confirm conclusions against the underlying code and runtime evidence.
+
+- [Binary Ninja MCP Server](https://docs.binary.ninja/guide/mcp.html) - Built-in Binary Ninja server that exposes functions, symbols, strings, disassembly, IL, and decompiled code to MCP clients; the headless variant requires a Commercial or Ultimate license.
+- [Chrome DevTools MCP](https://github.com/ChromeDevTools/chrome-devtools-mcp) - Official MCP server for inspecting Chrome network activity, runtime state, console output, and performance traces; requires Node.js LTS and Chrome.
+- [Dex Explore by Exmergo](https://github.com/exmergo/dex/tree/main/skills/explore) - Read-only database-exploration skill that profiles columns, infers candidate keys and row grain, and probes candidate joins; PII flags are heuristic, and execution requires uv and Python 3.11+.
+- [Gepetto](https://github.com/JusticeRage/Gepetto) - IDA plugin that asks language models to explain decompiled functions and rename their variables; requires IDA 7.6 or later and access to a supported model provider.
+- [Ghidra MCP Server](https://github.com/bethington/ghidra-mcp) - Connects AI clients to Ghidra analysis through MCP.
+- [GhidraMCP](https://github.com/LaurieWired/GhidraMCP) - Ghidra plugin and MCP server for decompiling, listing, and renaming functions and data; the original project from which Ghidra MCP Server was derived.
+- [Hex-Rays IDA MCP](https://github.com/HexRaysSA/ida-mcp) - Official IDA MCP server for agent access to binary analysis; requires IDA 9.4+ with idalib, Python 3.11+, and uv, with IDA licensing separate from the server.
+- [IDA Pro MCP](https://github.com/mrexodia/ida-pro-mcp) - Exposes IDA analysis and scripting capabilities to MCP clients; requires a compatible IDA installation.
+- [JADX-AI-MCP](https://github.com/zinja-coder/jadx-ai-mcp) - Connects AI clients to JADX for Android application analysis.
+- [OpenDeviceDB](https://github.com/opendevicedb/opendevicedb) - Experimental device-support registry with an MCP server for finding upstream protocol and firmware projects by model, FCC ID, or USB vid:pid; the npm server requires Node.js 20+, imported record quality varies, and claims/findings require a local checkout and pull request for public inclusion.
+- [radare2 MCP](https://github.com/radareorg/radare2-mcp) - Provides an MCP interface to radare2 for agent-driven binary analysis.
+- [re-audit](https://github.com/TLSRUF/re-audit) - Statically audits ELF/PE/Mach-O binaries and Android APKs for missing exploit mitigations (NX, PIE/ASLR, RELRO, stack canary), hardcoded secrets, and risky exported components; runs as a CLI or MCP server with no network access and no execution of the target. Findings are heuristic candidates for manual review, not confirmed vulnerabilities. Requires Python 3.10+.
+- [RES](https://github.com/alextnetto/res) - Experimental agent skill for documenting a SaaS web app's screens, business rules, data model, API shapes, and design tokens through the browser, with sandbox and change-ledger guidance; requires a browser-driving agent and Node.js 22+.
+- [ReverseAI](https://github.com/dagoSte/reverseai) - Static-analysis CLI and MCP server for binaries, Android packages and JavaScript bundles, with byte-linked findings and separate labels for tool-derived interpretations; requires Python 3.12+, and optional Ghidra, JADX, LIEF, YARA-X and Babel workers currently use Docker ARM64 images.
+- [WinDbg MCP](https://learn.microsoft.com/en-us/windows-hardware/drivers/debuggercmds/set-up-windbg-mcp) - Official MCP server built into WinDbg 1.2610.1001.0 and later; supported clients are VS Code with GitHub Copilot and GitHub Copilot CLI, with one active MCP client per WinDbg session.
+
+## Practice and communities
+
+![Interlocking challenge tiles beside community chat bubbles](.github/section-art/practice.png)
+
+- [crackmes.one](https://crackmes.one/) - Practice binaries organized by platform, architecture, and difficulty.
+- [FLARE-On](https://flare-on.com/) - Annual reverse-engineering challenge series with previous challenges and solutions.
+- [Microcorruption](https://microcorruption.com/) - Browser-based embedded security CTF in which you reverse and exploit firmware for simulated MSP430 lock devices with a built-in debugger.
+- [OALabs](https://www.youtube.com/@OALABS) - Video tutorials on malware reverse engineering, unpacking, and analysis tooling.
+- [picoCTF](https://picoctf.org/) - Free CTF platform from Carnegie Mellon University with beginner-friendly reversing, forensics, and binary exploitation challenges, plus a year-round practice gym.
+- [r/ReverseEngineering](https://www.reddit.com/r/ReverseEngineering/) - Subreddit for sharing reverse-engineering articles, tools, and research.
+- [Reverse Engineering Stack Exchange](https://reverseengineering.stackexchange.com/) - Questions and answers about tools, assembly, executable formats, and analysis techniques.
+- [Root Me](https://www.root-me.org/) - Challenge platform whose categories include binary cracking, app-system exploitation, and forensics.
+
+## Related lists
+
+![Reference catalogs connected by a chain link](.github/section-art/related-lists.png)
+
+See the [list structure and maintenance review](docs/list-review.md) for a dated comparison of 21 general and specialist collections. Recent activity and popularity are assessed separately there.
+
+The [2026-10-25 catalog source review](docs/catalog-expansion-review.md) records the purpose, prerequisites, source snapshots, and evidence limits for the new specialized entries; documented resources are distinguished from executed examples.
+
+- [AI Rebuilds](https://ai-rebuilds.com/) - Directory of software and game reconstructions, ports, decompilations, and supporting tools, with method and reported AI-involvement labels and a weekly GitHub metadata-refresh workflow; provenance and compatibility claims require independent review.
+- [Awesome AI Reverse Engineering](https://github.com/DiscoverBox/awesome-ai-reverse) - AI integrations organized by analysis ecosystem, with English and Chinese editions.
+- [Awesome Cyber Security Heaven](https://github.com/RanaKhan77/awesome-cyber-security-heaven) - Broad cybersecurity directory with reverse-engineering and debugging tools such as Ghidra, radare2, and GDB alongside crackme practice links; individual resources have their own licenses and free-tier restrictions.
+- [Awesome Embedded Security](https://github.com/hexsecs/awesome-embedded-security) - Firmware and hardware tools, learning resources, and repository-health workflows.
+- [Awesome Game File Format Reversing](https://github.com/VelocityRa/awesome-game-file-format-reversing) - Game formats, engines, asset tools, and specialist references.
+- [Awesome REA](https://github.com/kaixinbaba/awesome-rea) - Independent directory of open-source reconstructions, reimplementations, compatibility projects, and REA resources, with dated source reviews, license notes, and known limits.
+- [Awesome REA (reacher-z)](https://github.com/reacher-z/Awesome-REA) - Bilingual catalog of reverse-engineering tools, reconstruction projects, case studies, and research, with a searchable website and a separately labeled automated repository index.
+- [Awesome Reverse Engineering and Malware Analysis](https://github.com/ZX41R/awesome-reverse-engineering-and-malware-analysis) - Topic pages spanning reversing, malware analysis, and related research.
+- [Awesome Reverse-Engineered](https://github.com/alexgaoth/awesome-reverse-engineered) - Searchable, automatically collected index of open-source implementations, unofficial clients, device integrations, and protocol or file-format projects, with an agent skill and MCP server; nightly GitHub metadata checks track repository health, while relevance and technical claims require independent review.
+- [Awesome Reversing by Reversing.ID](https://github.com/ReversingID/Awesome-Reversing) - Separate catalogs for software, hardware, formats, and databases.
+- [Awesome Web Reversing](https://github.com/TheQmaks/awesome-web-reversing) - Web investigation workflows and a machine-readable tool catalog.
+
+## Contributing and maintenance
+
+![A maintenance checklist beside a wrench](.github/section-art/contributing.png)
+
+Read [CONTRIBUTING.md](CONTRIBUTING.md) to suggest a resource or fix an entry. Prefer canonical project links and descriptions that explain when a resource is useful.
+
+The [priority-candidate source review](docs/priority-candidates.md) records dated support claims, required environments, and four [reproducible examples](examples/resource-intake/README.md); documented support and reproduced behavior are recorded separately.
+
+Links are checked on pull requests, pushes to the default branch, and weekly by [GitHub Actions](.github/workflows/links.yml). A passing link check confirms availability, not tool quality or maintenance; review archived projects, compatibility changes, and replacements when updating entries.
+
+## License
+
+![A shared document with an open padlock](.github/section-art/license.png)
+
+[CC0 1.0](LICENSE). Listed projects retain their own licenses.

@@ -1,0 +1,20 @@
+id = "ilspycmd"
+name = "ILSpy command line"
+version = "11.2.0.10050"
+license = "MIT"
+integration = "sidecar"
+homepage = "https://github.com/icsharpcode/ILSpy"
+binaries = ["ilspycmd"]
+install_dir = "engines/ilspycmd/11.2.0.10050"
+
+[install]
+method = "dotnet-tool"
+package = "ilspycmd"
+version = "11.2.0.10050"
+
+[healthcheck]
+command = ["ilspycmd", "--version"]
+timeout_s = 60
+
+[notes]
+role = ".NET decompiler (MIT) — `avero dotnet decompile <assembly>`"

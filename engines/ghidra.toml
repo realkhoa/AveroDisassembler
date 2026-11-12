@@ -1,0 +1,24 @@
+id = "ghidra"
+name = "Ghidra"
+version = "12.2"
+license = "Apache-2.0"
+integration = "sidecar"
+homepage = "https://github.com/NationalSecurityAgency/ghidra"
+requires = ["jdk>=21"]
+binaries = ["analyzeHeadless"]
+install_dir = "engines/ghidra/12.2"
+
+[install]
+method = "zip"
+
+[download.windows-x64]
+url = "https://github.com/NationalSecurityAgency/ghidra/releases/download/Ghidra_12.2_build/ghidra_12.2_PUBLIC.zip"
+sha256 = "PIN_BEFORE_SHIPPING"
+archive = "zip"
+
+[healthcheck]
+command = ["analyzeHeadless", "-help"]
+timeout_s = 60
+
+[notes]
+role = "Native decompiler + deep analysis (primary engine for P2)"

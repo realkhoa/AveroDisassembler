@@ -1,0 +1,23 @@
+id = "jadx"
+name = "JADX"
+version = "1.5.6"
+license = "Apache-2.0"
+integration = "sidecar"
+homepage = "https://github.com/skylot/jadx"
+binaries = ["jadx"]
+install_dir = "engines/jadx/1.5.6"
+
+[install]
+method = "zip"
+
+[download.windows-x64]
+url = "https://github.com/skylot/jadx/releases/download/v1.5.6/jadx-1.5.6.zip"
+sha256 = "PIN_BEFORE_SHIPPING"
+archive = "zip"
+
+[healthcheck]
+command = ["jadx", "--version"]
+timeout_s = 30
+
+[notes]
+role = "Android DEX decompiler (P3 sidecar)"

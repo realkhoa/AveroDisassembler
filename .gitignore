@@ -1,0 +1,33 @@
+# Rust build artifacts
+/target/
+**/*.rs.bk
+
+# Avero runtime data
+.avero/
+avero-out/
+
+# Engine installs and caches: only manifests are tracked
+/engines/*
+!/engines/*.toml
+
+# Python (legacy tooling, if any)
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+.pytest_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+
+# Node / web
+node_modules/
+.next/
+out/
+
+# Editors / OS
+.vscode/
+.idea/
+Thumbs.db
+desktop.ini
+.DS_Store
