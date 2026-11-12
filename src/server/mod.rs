@@ -1159,6 +1159,8 @@ fn handle_http(mut request: Request, state: Arc<AppState>) {
             header.value.as_str().to_string(),
         );
     }
+    let cors_origin = state.cors_origin(headers.get("origin").map(String::as_str));
+
     if !host_allowed(headers.get("host")) {
         respond_json(
             request,
@@ -1201,22 +1203,18 @@ fn handle_http(mut request: Request, state: Arc<AppState>) {
     let result = handle_request(&state, &http_request);
     match result {
         ApiResult::Json(status, value) => {
-            respond_json(request, status, &value, &state.allow_origin);
+            respond_json(request, status, &value, &cors_origin);
         }
         ApiResult::Bytes(status, content_type, body) => {
             let response = decorate(
                 Response::from_data(body).with_status_code(StatusCode(status)),
-                &state.allow_origin,
+                &cors_origin,
                 Some(content_type),
             );
             let _ = request.respond(response);
         }
         ApiResult::Empty(status) => {
-            let response = decorate(
-                Response::empty(StatusCode(status)),
-                &state.allow_origin,
-                None,
-            );
+            let response = decorate(Response::empty(StatusCode(status)), &cors_origin, None);
             let _ = request.respond(response);
         }
         ApiResult::Stream(body) => {
@@ -1226,7 +1224,7 @@ fn handle_http(mut request: Request, state: Arc<AppState>) {
                     header("Content-Type", "text/event-stream; charset=utf-8"),
                     header("Cache-Control", "no-cache"),
                     header("Connection", "keep-alive"),
-                    header("Access-Control-Allow-Origin", &state.allow_origin),
+                    header("Access-Control-Allow-Origin", &cors_origin),
                     header("Vary", "Origin"),
                 ],
                 body,

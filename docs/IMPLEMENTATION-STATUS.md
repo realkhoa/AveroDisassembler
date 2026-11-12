@@ -1,13 +1,13 @@
-# Implementation status — v0.13.0 (native Rust core + web workbench M1–M4, E2E + axe)
+# Implementation status — v0.14.0 (native Rust core + web workbench + Tauri desktop app)
 
 | | |
 |---|---|
 | **Date** | 2026-11-12 |
-| **Version** | 0.13.0 (Rust core) |
+| **Version** | 0.14.0 (Rust core + desktop) |
 | **Toolchain** | rustc 1.94.1 MSVC, VS 18 Community, Windows 11 26200 |
 | **Binary** | `target/release/avero.exe` — **4.12 MB**, no runtime dependency |
 | **Tests** | **74 passing** (54 unit + 7 CLI + 4 format + 4 analyzer + 5 APK manifest) |
-| **UI** | **Milestones M1–M4 implemented in `apps/web`** — Next.js 15 + React 19 + TypeScript strict. File + API modes, scan jobs over SSE, .NET/APK/signature views, Ghidra/ILSpyCmd decompile, rizin disassembly, engine manager, report diff. **22 Vitest tests** (including live API integration) and production build verified. See [HANDOVER-UI.md](HANDOVER-UI.md) and [UI-SPEC.md](UI-SPEC.md). |
+| **UI** | **Web (M1–M4) in `apps/web`** — Next.js 15 + React 19, 22 Vitest + 11 Playwright E2E, axe-clean. **Desktop (Tauri 2) in `apps/desktop`** — Vite + React, file/API modes, scan SSE, decompile, disassembly, engines, diff; Windows exe verified. See [HANDOVER-UI.md](HANDOVER-UI.md), [HANDOVER-DESKTOP.md](HANDOVER-DESKTOP.md). |
 | **Related docs** | [Design](AVERO-DISASSEMBLER-DESIGN.md) · [Research](RE-RESEARCH-REPORT.md) · [Signatures](SIGNATURES.md) · [Engines](ENGINES.md) |
 
 ---

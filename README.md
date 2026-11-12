@@ -6,7 +6,7 @@
 [![Release](https://img.shields.io/github/v/release/realkhoa/AveroDisassembler?sort=semver)](https://github.com/realkhoa/AveroDisassembler/releases)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
-**Status: v0.13.0 — Rust core + local API + engines + APK/IL2CPP + report diff + polished web workbench (M1–M4, E2E + axe)** (P0/P1/P2/P3/P4). Static triage and
+**Status: v0.14.0 — Rust core + local API + engines + APK/IL2CPP + report diff + web workbench + Tauri desktop app** (P0/P1/P2/P3/P4). Static triage and
 analysis for PE, .NET, ELF, Mach-O, APK (including the **binary AndroidManifest.xml**), Unity
 IL2CPP, Godot PCK, firmware containers, scripts and WASM. Includes a **native signature
 engine** (YARA subset), an **engine installer** (ILSpyCmd, rizin, Ghidra, jadx),
@@ -150,6 +150,26 @@ flows through `Fragment` → `Report`.
 | [Technical design](docs/AVERO-DISASSEMBLER-DESIGN.md) | IR, analyzer protocol, pipeline, engine manager, CLI/API/MCP, security, testing |
 | [License matrix](docs/THIRD-PARTY-ENGINES.md) | How third-party engines and Rust dependencies are integrated |
 | [Research data](research/) | GitHub API snapshot, awesome lists, 112-repo metadata |
+
+## Desktop workbench (`apps/desktop`)
+
+Native desktop app built with **Tauri 2 + Vite + React 19** (no Node runtime in production;
+WebView2 on Windows). It reuses the same `avero.report/v1` / `avero.api/v1` contracts and
+supports file mode plus the local API daemon.
+
+```powershell
+# API mode: start the daemon first
+target\release\avero.exe serve --port 8787
+
+# build the desktop executable (MSVC env required)
+cmd /c "call \"C:\Program Files\Microsoft Visual Studio\18\Community\VC\Auxiliary\Build\vcvars64.bat\" && pnpm --filter desktop tauri build --no-bundle"
+apps\desktop\src-tauri\target\release\avero-desktop.exe
+```
+
+Screens: Home, Overview, Findings, Evidence, Sections, Imports/Exports, Strings, Hex,
+APK Manifest, .NET Metadata, Signatures, Disassembly, Decompile, Diff, Engine packs,
+Settings. See [apps/desktop/README.md](apps/desktop/README.md) and
+[docs/HANDOVER-DESKTOP.md](docs/HANDOVER-DESKTOP.md).
 
 ## Web workbench (`apps/web`)
 

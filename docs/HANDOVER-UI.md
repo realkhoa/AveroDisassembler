@@ -178,3 +178,10 @@ pnpm --filter web e2e:headed # watch the browser
 
 Latest local run: **11 passed (44s)**. Screenshots: `docs/screenshots/` (home file mode,
 APK overview, settings mode switch).
+
+## 9. Desktop (Tauri) shell
+
+A native desktop build lives in `apps/desktop` (Tauri 2 + Vite + React 19) and reuses the
+same data contracts. See [HANDOVER-DESKTOP.md](HANDOVER-DESKTOP.md). The core API now echoes
+CORS for Tauri webview origins (`tauri://localhost`, `http://tauri.localhost`), so API mode
+works without extra daemon flags.

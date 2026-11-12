@@ -314,6 +314,36 @@ impl AppState {
         Ok(stored)
     }
 
+    /// Resolve the Access-Control-Allow-Origin value for a request.
+    ///
+    /// Local-only server: echo a configured origin or one of the built-in desktop
+    /// (Tauri) / localhost dev origins; otherwise fall back to the first configured one.
+    pub fn cors_origin(&self, request_origin: Option<&str>) -> String {
+        const BUILTIN: &[&str] = &[
+            "tauri://localhost",
+            "http://tauri.localhost",
+            "https://tauri.localhost",
+            "http://localhost:3000",
+            "http://127.0.0.1:3000",
+        ];
+        if let Some(origin) = request_origin {
+            let configured = self
+                .allow_origin
+                .split(',')
+                .map(str::trim)
+                .filter(|value| !value.is_empty());
+            if BUILTIN.contains(&origin) || configured.into_iter().any(|allowed| allowed == origin)
+            {
+                return origin.to_string();
+            }
+        }
+        self.allow_origin
+            .split(',')
+            .map(str::trim)
+            .find(|value| !value.is_empty())
+            .unwrap_or("http://localhost:3000")
+            .to_string()
+    }
     pub fn report_count(&self) -> usize {
         self.reports
             .lock()
