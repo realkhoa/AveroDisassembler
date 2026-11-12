@@ -4,7 +4,7 @@
 |---|---|
 | **Status** | Ready for implementation (spec v1.0) |
 | **Audience** | UI agents implementing the Avero workbench |
-| **Backend** | Rust CLI exists (v0.5.0). File mode is available today; REST/SSE API is specified here and implemented by the core team in parallel. |
+| **Backend** | Rust CLI exists (v0.6.0). File mode and the local REST/SSE API (`avero serve`, `avero.api/v1`) are **implemented**; UI agents can build against either mode. |
 | **Contracts** | `avero.report/v1` (report JSON), `avero.api/v1` (REST, see `docs/api/openapi.yaml`) |
 | **Sample data** | `docs/api/sample-report.json` (real report generated from `tests/fixtures/sample.apk`) |
 | **Language** | English UI. All user-visible strings must be English; structure the app for i18n but ship English first. |
@@ -20,9 +20,9 @@ talks to external engines directly.
 1. Build a **Next.js 15 (App Router) + React 19 + TypeScript (strict)** app in `apps/web`.
 2. Ship **file mode first**: user opens/drops a `report.json` produced by
    `avero scan <file> --json`; everything renders from that JSON (sample provided).
-3. Then add **API mode** behind the same data-source interface: a local REST server at
-   `http://127.0.0.1:8787` (`avero serve`, implemented by the core team). Mock it from
-   `docs/api/sample-report.json` and `docs/api/openapi.yaml`.
+3. Then add **API mode** behind the same data-source interface: run `avero serve` (local
+   REST/SSE server at `http://127.0.0.1:8787`, implemented in v0.6.0). Mock it from
+   `docs/api/sample-report.json` and `docs/api/openapi.yaml` if needed.
 4. Implement the screens in section 6, in the milestone order of section 14 (M1 report
    viewer → M2 API mode → M3 decompile/manifest → M4 future diff).
 5. Non-negotiable: **evidence-first UI** (every finding links to evidence), **read-only**

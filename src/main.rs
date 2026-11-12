@@ -51,6 +51,8 @@ enum Commands {
     },
     /// Show version and environment
     Version,
+    /// Run the local REST/SSE API for the workbench UI
+    Serve(ServeArgs),
     /// Manage engine packs (Ghidra, rizin, ILSpyCmd, jadx, ...)
     Engine {
         #[command(subcommand)]
@@ -129,6 +131,19 @@ struct ApkArgs {
     json: bool,
 }
 
+#[derive(Args)]
+struct ServeArgs {
+    /// Bind address (loopback only)
+    #[arg(long, default_value = "127.0.0.1")]
+    bind: String,
+    /// Port for the local API
+    #[arg(long, default_value_t = 8787)]
+    port: u16,
+    /// CORS origin allowed to call the API (the UI dev server)
+    #[arg(long = "cors-origin", default_value = "http://localhost:3000")]
+    cors_origin: String,
+}
+
 #[derive(Subcommand)]
 enum EngineCommands {
     /// List engine packs and install status
@@ -195,6 +210,7 @@ fn main() -> std::process::ExitCode {
             DotnetCommands::Decompile(args) => run_dotnet_decompile(args),
         },
         Commands::Version => run_version(),
+        Commands::Serve(args) => avero::server::run(&args.bind, args.port, &args.cors_origin),
         Commands::Engine { command } => match command {
             EngineCommands::List => run_engine_list(),
             EngineCommands::Doctor => run_engine_doctor(),

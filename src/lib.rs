@@ -11,6 +11,7 @@ pub mod pehdr;
 pub mod pipeline;
 pub mod probe;
 pub mod report;
+pub mod server;
 pub mod signatures;
 pub mod strings;
 pub mod util;

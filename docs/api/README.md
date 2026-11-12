@@ -3,6 +3,11 @@
 The UI workbench consumes the core through a **local-only** API. This directory defines the
 contract so the UI and core can be developed independently.
 
+**Status: implemented in v0.6.0.** Run `avero serve` (loopback `127.0.0.1:8787` by default)
+and the UI can switch from file mode to API mode. All read endpoints plus scan/decompile/
+engine-install job endpoints are live; disassembly and diff return `501` until the next
+phase.
+
 | File | Purpose |
 |---|---|
 | [`openapi.yaml`](openapi.yaml) | OpenAPI 3.1 specification (`avero.api/v1`) |
@@ -12,8 +17,14 @@ contract so the UI and core can be developed independently.
 
 1. **File mode** (works today): the UI reads a `report.json` produced by
    `avero scan <file> --json`. No server is required.
-2. **API mode** (planned): the core exposes this API at `http://127.0.0.1:8787`
-   (`avero serve`). The UI must use the same data contracts for both modes.
+2. **API mode** (works today): run `avero serve --port 8787`, then use the endpoints in
+   `openapi.yaml`. The server binds to loopback only and stores uploads/reports under
+   `.avero/serve/` (git-ignored).
+
+```powershell
+target\release\avero.exe serve --port 8787
+# from the UI: GET http://127.0.0.1:8787/api/health
+```
 
 ## Regenerating the sample report
 

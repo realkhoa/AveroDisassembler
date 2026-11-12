@@ -6,16 +6,17 @@
 [![Release](https://img.shields.io/github/v/release/realkhoa/AveroDisassembler?sort=semver)](https://github.com/realkhoa/AveroDisassembler/releases)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
-**Status: v0.5.0 — Rust core** (P0/P1/P2). Static triage and analysis for PE, .NET, ELF,
+**Status: v0.6.0 — Rust core + local API** (P0/P1/P2). Static triage and analysis for PE, .NET, ELF,
 Mach-O, APK (including the **binary AndroidManifest.xml**), Unity IL2CPP, Godot PCK,
 firmware containers, scripts and WASM. Includes a **native signature engine** (YARA
-subset), an **engine installer** (ILSpyCmd, rizin, Ghidra, jadx) and
-**`avero dotnet decompile`**. Every report is JSON/Markdown/HTML with verifiable evidence.
+subset), an **engine installer** (ILSpyCmd, rizin, Ghidra, jadx), **`avero dotnet decompile`**
+and a **local REST/SSE API** (`avero serve`) for the workbench UI. Every report is
+JSON/Markdown/HTML with verifiable evidence.
 
 **UI is specified but not built here** — it is owned by separate UI agents. The complete
 specification (screens, flows, data contracts, design system, milestones, acceptance
 criteria) is in [docs/UI-SPEC.md](docs/UI-SPEC.md), with the API contract in
-[docs/api/](docs/api/README.md).
+[docs/api/](docs/api/README.md). The API is implemented and can be exercised today.
 
 ## Why Rust?
 
@@ -54,6 +55,9 @@ target\release\avero.exe dotnet decompile SampleLib.dll --type SampleLib.Class1 
 target\release\avero.exe engine install rizin
 target\release\avero.exe engine list
 
+# Local API for the AI/UI workbench (REST + SSE, loopback only)
+target\release\avero.exe serve --port 8787
+
 # Tests
 scripts\build.bat test
 ```
@@ -73,6 +77,7 @@ Prebuilt binaries are attached to [GitHub Releases](https://github.com/realkhoa/
 | `engine list/doctor` | Engine packs and local prerequisite checks |
 | `engine install <id>` | Install an engine pack (zip + SHA-256, or `dotnet-tool`); `--from` for offline archives, `--force`, `--allow-unpinned` |
 | `engine pin <id>` | Download the archive, compute SHA-256 and pin it in the manifest |
+| `serve` | Local REST/SSE API (`avero.api/v1`) for the workbench UI: health, scans, jobs, reports, findings, evidence, strings, hex, APK manifest, .NET metadata, engines, decompile |
 | `version` | Version and environment |
 
 Exit codes: `0` success, `1` error.
