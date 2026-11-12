@@ -31,3 +31,6 @@ out/
 Thumbs.db
 desktop.ini
 .DS_Store
+
+# TypeScript build info
+*.tsbuildinfo
