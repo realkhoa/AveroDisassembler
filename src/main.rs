@@ -2,7 +2,7 @@
 
 use std::collections::HashSet;
 use std::path::{Path, PathBuf};
-use std::time::Instant;
+use std::time::{Duration, Instant};
 
 use anyhow::{anyhow, Context, Result};
 use clap::{Args, Parser, Subcommand};
@@ -49,6 +49,8 @@ enum Commands {
         #[command(subcommand)]
         command: DotnetCommands,
     },
+    /// Native decompilation via Ghidra headless (sidecar engine)
+    Decompile(DecompileArgs),
     /// Show version and environment
     Version,
     /// Run the local REST/SSE API for the workbench UI
@@ -144,6 +146,27 @@ struct ServeArgs {
     cors_origin: String,
 }
 
+#[derive(Args)]
+struct DecompileArgs {
+    /// Binary to decompile
+    path: PathBuf,
+    /// Only decompile this function name or entry-point address (e.g. 0x140001000)
+    #[arg(long)]
+    function: Option<String>,
+    /// Output directory (default: avero-out/decompile-native-<name>)
+    #[arg(long, short = 'o')]
+    out: Option<PathBuf>,
+    /// Maximum number of functions to decompile
+    #[arg(long, default_value_t = 300)]
+    limit: usize,
+    /// Ghidra headless timeout in seconds
+    #[arg(long, default_value_t = 900)]
+    timeout: u64,
+    /// Print the decompilation JSON to stdout
+    #[arg(long)]
+    json: bool,
+}
+
 #[derive(Subcommand)]
 enum EngineCommands {
     /// List engine packs and install status
@@ -210,6 +233,7 @@ fn main() -> std::process::ExitCode {
             DotnetCommands::Decompile(args) => run_dotnet_decompile(args),
         },
         Commands::Version => run_version(),
+        Commands::Decompile(args) => run_decompile(args),
         Commands::Serve(args) => avero::server::run(&args.bind, args.port, &args.cors_origin),
         Commands::Engine { command } => match command {
             EngineCommands::List => run_engine_list(),
@@ -589,6 +613,86 @@ fn run_apk(args: ApkArgs) -> Result<()> {
         println!("\n{}", "Components".bold());
         println!("{components}");
     }
+    Ok(())
+}
+
+fn run_decompile(args: DecompileArgs) -> Result<()> {
+    if !args.path.is_file() {
+        return Err(anyhow!("binary not found: {}", args.path.display()));
+    }
+    let stem = args
+        .path
+        .file_stem()
+        .map(|value| value.to_string_lossy().to_string())
+        .unwrap_or_else(|| "binary".to_string());
+    let out_dir = args.out.unwrap_or_else(|| {
+        std::env::current_dir()
+            .unwrap_or_else(|_| PathBuf::from("."))
+            .join("avero-out")
+            .join(format!("decompile-native-{stem}"))
+    });
+    std::fs::create_dir_all(&out_dir)?;
+    if args.json {
+        println!(
+            "{}",
+            serde_json::json!({
+                "message": "decompiling",
+                "binary": args.path.to_string_lossy(),
+                "out_dir": out_dir.to_string_lossy(),
+            })
+        );
+    } else {
+        println!(
+            "{} decompiling {} with Ghidra headless (limit {}, timeout {}s)",
+            "..".cyan().bold(),
+            args.path.display(),
+            args.limit,
+            args.timeout
+        );
+    }
+    let options = avero::decompile::DecompileOptions {
+        only: args.function.clone(),
+        limit: args.limit,
+        timeout: Duration::from_secs(args.timeout.max(30)),
+    };
+    let result = avero::decompile::decompile_file(&args.path, &options)?;
+    let mut written = Vec::new();
+    for function in &result.functions {
+        if function.decompiled.trim().is_empty() {
+            continue;
+        }
+        let file = out_dir.join(format!(
+            "{}.c",
+            avero::decompile::function_file_name(&function.name)
+        ));
+        std::fs::write(&file, &function.decompiled)?;
+        written.push(file);
+    }
+    let json_path = out_dir.join("decompile.json");
+    std::fs::write(&json_path, serde_json::to_string_pretty(&result)?)?;
+    if args.json {
+        println!("{}", serde_json::to_string_pretty(&result)?);
+        return Ok(());
+    }
+    println!(
+        "{} decompiled {} function(s) from {} ({} language) -> {}",
+        "ok".green().bold(),
+        result.functions.len(),
+        result.program,
+        result.language,
+        out_dir.display()
+    );
+    for function in result.functions.iter().take(20) {
+        println!(
+            "  {} @ {} ({} bytes)",
+            function.name, function.entry, function.size
+        );
+    }
+    if result.functions.len() > 20 {
+        println!("  ... and {} more function(s)", result.functions.len() - 20);
+    }
+    println!("  json: {}", json_path.display());
+    println!("  files: {} C source file(s)", written.len());
     Ok(())
 }
 

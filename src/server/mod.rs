@@ -18,6 +18,7 @@ use base64::Engine as _;
 use serde_json::{json, Value};
 use tiny_http::{Header, Method, Request, Response, Server, StatusCode};
 
+use crate::decompile;
 use crate::engine;
 use crate::hashing;
 use crate::ir::TOOL_VERSION;
@@ -622,6 +623,23 @@ fn handle_decompile(state: &Arc<AppState>, request: &HttpRequest, report_id: &st
     let Some(stored) = state.get_report(report_id) else {
         return not_found("report not found");
     };
+    let body: Value = serde_json::from_slice(&request.body).unwrap_or_else(|_| json!({}));
+    let engine_name = body
+        .get("engine")
+        .and_then(Value::as_str)
+        .unwrap_or("ilspycmd")
+        .to_ascii_lowercase();
+    let type_name = body.get("type").and_then(Value::as_str).map(str::to_string);
+    let function_limit = body
+        .get("limit")
+        .and_then(Value::as_u64)
+        .map(|value| value as usize)
+        .unwrap_or(50)
+        .clamp(1, 500);
+    let assembly = stored.artifact_path.clone();
+    if engine_name == "ghidra" {
+        return start_ghidra_decompile(state, assembly, type_name, function_limit);
+    }
     let Some(tool) = locate_ilspycmd() else {
         return ApiResult::Json(
             409,
@@ -631,15 +649,6 @@ fn handle_decompile(state: &Arc<AppState>, request: &HttpRequest, report_id: &st
             ),
         );
     };
-    let type_name = serde_json::from_slice::<Value>(&request.body)
-        .ok()
-        .and_then(|value| {
-            value
-                .get("type")
-                .and_then(Value::as_str)
-                .map(str::to_string)
-        });
-    let assembly = stored.artifact_path.clone();
     let job = Job::new(new_job_id());
     let job_id = job.id.clone();
     state.insert_job(job.clone());
@@ -708,6 +717,74 @@ fn handle_decompile(state: &Arc<AppState>, request: &HttpRequest, report_id: &st
             Err(error) => job.publish(JobEvent::error(
                 &thread_job_id,
                 "engine_failed",
+                &error.to_string(),
+            )),
+        }
+    });
+    ApiResult::Json(202, json!({"job_id": job_id, "status": "queued"}))
+}
+
+/// Start a native decompilation job through Ghidra headless.
+fn start_ghidra_decompile(
+    state: &Arc<AppState>,
+    assembly: PathBuf,
+    only: Option<String>,
+    limit: usize,
+) -> ApiResult {
+    if decompile::locate_ghidra().is_none() {
+        return ApiResult::Json(
+            409,
+            error_json(
+                "engine_missing",
+                "Ghidra is not installed; run `avero engine install ghidra` (requires JDK 25+)",
+            ),
+        );
+    }
+    let job = Job::new(new_job_id());
+    let job_id = job.id.clone();
+    state.insert_job(job.clone());
+    let thread_job_id = job_id.clone();
+    std::thread::spawn(move || {
+        job.publish(JobEvent::progress(
+            &thread_job_id,
+            "decompile",
+            10.0,
+            "running Ghidra headless",
+        ));
+        let options = decompile::DecompileOptions {
+            only,
+            limit,
+            timeout: std::time::Duration::from_secs(900),
+        };
+        match decompile::decompile_file(&assembly, &options) {
+            Ok(result) => {
+                let files: Vec<Value> = result
+                    .functions
+                    .iter()
+                    .map(|function| {
+                        json!({
+                            "name": format!("{}.c", decompile::function_file_name(&function.name)),
+                            "entry": function.entry,
+                            "size": function.size,
+                            "content": function.decompiled,
+                        })
+                    })
+                    .collect();
+                job.publish(JobEvent::done(
+                    &thread_job_id,
+                    None,
+                    Some(json!({
+                        "engine": "ghidra",
+                        "program": result.program,
+                        "language": result.language,
+                        "image_base": result.image_base,
+                        "files": files,
+                    })),
+                ));
+            }
+            Err(error) => job.publish(JobEvent::error(
+                &thread_job_id,
+                "decompile_failed",
                 &error.to_string(),
             )),
         }

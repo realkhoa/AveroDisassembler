@@ -354,10 +354,17 @@ paths:
               properties:
                 type:
                   type: string
-                  description: Fully qualified type name; omit to decompile the whole assembly
+                  description: Fully qualified type name (.NET) or function name/address (native); omit for the whole assembly
                 engine:
                   type: string
+                  enum: [ilspycmd, ghidra]
                   default: ilspycmd
+                limit:
+                  type: integer
+                  minimum: 1
+                  maximum: 500
+                  default: 50
+                  description: Maximum functions to decompile (native engines only)
       responses:
         "202":
           description: Decompile accepted

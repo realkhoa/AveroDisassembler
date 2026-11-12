@@ -6,12 +6,13 @@
 [![Release](https://img.shields.io/github/v/release/realkhoa/AveroDisassembler?sort=semver)](https://github.com/realkhoa/AveroDisassembler/releases)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
-**Status: v0.6.0 — Rust core + local API** (P0/P1/P2). Static triage and analysis for PE, .NET, ELF,
-Mach-O, APK (including the **binary AndroidManifest.xml**), Unity IL2CPP, Godot PCK,
-firmware containers, scripts and WASM. Includes a **native signature engine** (YARA
-subset), an **engine installer** (ILSpyCmd, rizin, Ghidra, jadx), **`avero dotnet decompile`**
-and a **local REST/SSE API** (`avero serve`) for the workbench UI. Every report is
-JSON/Markdown/HTML with verifiable evidence.
+**Status: v0.7.0 — Rust core + local API + Ghidra decompile** (P0/P1/P2). Static triage and
+analysis for PE, .NET, ELF, Mach-O, APK (including the **binary AndroidManifest.xml**), Unity
+IL2CPP, Godot PCK, firmware containers, scripts and WASM. Includes a **native signature
+engine** (YARA subset), an **engine installer** (ILSpyCmd, rizin, Ghidra, jadx),
+**`avero dotnet decompile`**, **native decompilation via Ghidra headless**
+(`avero decompile`) and a **local REST/SSE API** (`avero serve`) for the workbench UI.
+Every report is JSON/Markdown/HTML with verifiable evidence.
 
 **UI is specified but not built here** — it is owned by separate UI agents. The complete
 specification (screens, flows, data contracts, design system, milestones, acceptance
@@ -25,14 +26,14 @@ The first prototype was written in Python and worked, but startup took ~450 ms, 
 venv. The Rust rewrite is a single 3.4 MB executable that scans the same file in ~111 ms
 (cold) / ~20 ms (warm), with no runtime to install.
 
-| Task | Python prototype | Rust 0.2 | **Rust 0.5** | Speed-up |
+| Task | Python prototype | Rust 0.2 | **Rust 0.7** | Speed-up |
 |---|---|---|---|---|
 | `scan notepad.exe` (352 KB, cold) | 1,980 ms | 100 ms | **111 ms** | ~18× |
 | `scan notepad.exe` (warm) | 1,070 ms | 18 ms | **20 ms** | ~53× |
 | `scan APK` (with AXML parsing) | — | — | **38 ms** | — |
 | CLI startup | ~450 ms | 13 ms | **11 ms** | ~40× |
-| Distribution | venv + Python (~100 MB) | 2.74 MB | **3.36 MB** | — |
-| Tests | 40 (pytest) | 38 | **54** | — |
+| Distribution | venv + Python (~100 MB) | 2.74 MB | **3.79 MB** | — |
+| Tests | 40 (pytest) | 38 | **63** | — |
 
 > Measurements include ~10–13 ms of PowerShell process overhead; the binary itself is faster.
 
@@ -52,6 +53,8 @@ target\release\avero.exe strings blob.bin -n 8
 # Engines + decompilation
 target\release\avero.exe engine install ilspycmd
 target\release\avero.exe dotnet decompile SampleLib.dll --type SampleLib.Class1 --out .\decompiled
+target\release\avero.exe engine install ghidra          # requires JDK 25+
+target\release\avero.exe decompile notepad.exe --limit 20 --out .\native-decompiled
 target\release\avero.exe engine install rizin
 target\release\avero.exe engine list
 
@@ -74,6 +77,7 @@ Prebuilt binaries are attached to [GitHub Releases](https://github.com/realkhoa/
 | `strings <file>` | Extract ASCII/UTF-16LE (`-n`, `--limit`, `--unicode`, `--ascii`, `--json`) |
 | `apk <file>` | Parse binary `AndroidManifest.xml`: package/version/SDK, permissions, debuggable, components (exported/permission); `--json` |
 | `dotnet decompile <asm>` | Decompile an assembly or type with ILSpyCmd (`--type`, `--out`, `--json`) |
+| `decompile <file>` | Native decompilation via Ghidra headless (`--function`, `--limit`, `--timeout`, `--out`, `--json`); requires Ghidra + JDK 25+ |
 | `engine list/doctor` | Engine packs and local prerequisite checks |
 | `engine install <id>` | Install an engine pack (zip + SHA-256, or `dotnet-tool`); `--from` for offline archives, `--force`, `--allow-unpinned` |
 | `engine pin <id>` | Download the archive, compute SHA-256 and pin it in the manifest |

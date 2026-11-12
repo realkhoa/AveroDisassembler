@@ -3,10 +3,11 @@
 The UI workbench consumes the core through a **local-only** API. This directory defines the
 contract so the UI and core can be developed independently.
 
-**Status: implemented in v0.6.0.** Run `avero serve` (loopback `127.0.0.1:8787` by default)
-and the UI can switch from file mode to API mode. All read endpoints plus scan/decompile/
-engine-install job endpoints are live; disassembly and diff return `501` until the next
-phase.
+**Status: implemented in v0.7.0.** Run `avero serve` (loopback `127.0.0.1:8787` by default)
+and the UI can switch from file mode to API mode. All read endpoints plus scan and
+decompile jobs are live: `POST /api/reports/{id}/decompile` supports `engine` values
+`ilspycmd` (.NET) and `ghidra` (native, JDK 25+ required). Disassembly and diff return
+`501` until the next phase.
 
 | File | Purpose |
 |---|---|

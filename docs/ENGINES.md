@@ -83,8 +83,8 @@ avero engine install rizin --from D:\bundle\rizin-0.9.1-windows-x64.zip
 | ID | Method | License | Used for |
 |---|---|---|---|
 | `ilspycmd` | dotnet-tool | MIT | `avero dotnet decompile` |
-| `rizin` | zip | LGPL-3.0 | batch disassembly/CFG (adapter P2) |
-| `ghidra` | zip | Apache-2.0 | native decompilation (adapter P2) |
+| `rizin` | zip | LGPL-3.0 | batch disassembly/CFG (adapter P2, planned) |
+| `ghidra` | zip | Apache-2.0 | native decompilation via `avero decompile` (JDK 25+ required) |
 | `jadx` | zip | Apache-2.0 | APK/DEX decompilation (adapter P3) |
 
 Full license/integration matrix: [THIRD-PARTY-ENGINES.md](THIRD-PARTY-ENGINES.md).
@@ -99,3 +99,32 @@ avero dotnet decompile SampleLib.dll --json
 
 The engine is resolved in this order: `engines/ilspycmd/<version>` → `PATH`. Real
 executables, `.cmd`/`.bat` shims (Windows) and `dotnet tool` apphosts are supported.
+
+## Native decompilation via Ghidra
+
+Ghidra 12.2 is installed as a sidecar pack and requires **JDK 25+** (Ghidra's launcher
+checks the Java version; set `JAVA_HOME` or put JDK 25 on `PATH`).
+
+```powershell
+avero engine pin ghidra                 # download + SHA-256 pin the release archive (~570 MB)
+avero engine install ghidra             # verify, extract, locate support/analyzeHeadless.bat
+avero decompile notepad.exe --limit 20 --out .\native-decompiled
+avero decompile notepad.exe --function entry --limit 1 --json
+```
+
+How it works:
+
+1. Avero writes an embedded GhidraScript (`AveroExport.java`) to a temporary script directory.
+2. It runs `support/analyzeHeadless <tmp>/project AveroProject -import <file> -scriptPath ...
+   -postScript AveroExport.java <out.json> [only] [limit] -deleteProject`.
+3. The script decompiles functions (limit/timeout bounded) and writes JSON with
+   `name`, `entry`, `size`, `decompiled`.
+4. Avero writes one `<function>.c` per function plus `decompile.json`, or prints JSON with
+   `--json`.
+
+The same engine is available through the API:
+`POST /api/reports/{id}/decompile` with `{"engine":"ghidra","type":"entry","limit":2}`.
+
+Caveats: headless analysis of large binaries is CPU-heavy (minutes); the default CLI limit
+is 300 functions and the default timeout is 900 s. Ghidra output is derived code, not the
+original source; treat it as an aid, not ground truth.

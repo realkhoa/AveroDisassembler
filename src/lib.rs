@@ -2,6 +2,7 @@
 
 pub mod analyzers;
 pub mod axml;
+pub mod decompile;
 pub mod engine;
 pub mod evidence;
 pub mod findings;

@@ -345,7 +345,14 @@ fn fetch_archive(
     }
     let archive = cache_archive_path(manifest, platform, spec);
     if archive.is_file() {
-        return Ok(archive);
+        // A failed/truncated download may leave an empty file behind; never reuse it.
+        let usable = std::fs::metadata(&archive)
+            .map(|metadata| metadata.len() > 0)
+            .unwrap_or(false);
+        if usable {
+            return Ok(archive);
+        }
+        let _ = std::fs::remove_file(&archive);
     }
     if let Some(parent) = archive.parent() {
         std::fs::create_dir_all(parent)?;
@@ -354,7 +361,7 @@ fn fetch_archive(
         "downloading {} {} ({platform}) ...",
         manifest.id, manifest.version
     );
-    run_checked(
+    let result = run_checked(
         Command::new("curl").args([
             "-L",
             "--fail",
@@ -367,7 +374,11 @@ fn fetch_archive(
             &spec.url,
         ]),
         "curl download",
-    )?;
+    );
+    if let Err(error) = result {
+        let _ = std::fs::remove_file(&archive);
+        return Err(error);
+    }
     Ok(archive)
 }
 

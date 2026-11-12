@@ -350,7 +350,8 @@ For every screen: **data** (fields from the report/API), **layout**, **interacti
 
 - **Data**: job (`id`, `status`, `progress`, `error`), result (`files[]`, engine, type).
 - **Layout**: assembly/type selector (from .NET metadata; free-text allowed), engine select
-  (`ilspycmd`), Run button; progress panel; result split view: file tree + Monaco read-only.
+  (`ilspycmd` for .NET, `ghidra` for native; Ghidra requires JDK 25+), Run button; progress
+  panel; result split view: file tree + Monaco read-only.
 - **States**: engine missing → instructions `avero engine install ilspycmd`; job running
   (cancel), failed (stderr excerpt), success (files list + download/copy).
 - **Acceptance**: decompile of a type returns C# in Monaco; progress updates without page
