@@ -163,3 +163,25 @@ export interface RecentReport {
   findings: number;
   opened_at: string;
 }
+
+export interface CallRef {
+  from: number;
+  to: number;
+  kind: string;
+}
+
+export interface FunctionInfo {
+  address: number;
+  name: string;
+  size: number;
+  signature?: string | null;
+  callrefs: CallRef[];
+}
+
+export interface Annotation {
+  name?: string;
+  comment?: string;
+  prototype?: string;
+}
+
+export type AnnotationMap = Record<string, Annotation>;

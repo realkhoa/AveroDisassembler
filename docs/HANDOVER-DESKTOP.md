@@ -46,6 +46,18 @@ The core API echoes CORS origins for desktop WebView origins (`tauri://localhost
 `http://tauri.localhost`, `https://tauri.localhost`) plus configured/localhost origins, so the
 embedded webview can call its own loopback API.
 
+## Analysis workspace (Ghidra/IDA-style)
+
+- **Functions & Map** (`src/analysis.tsx`): core `/functions` endpoint runs rizin `aaa`+`aflj`
+  and returns functions with call references. UI supports search, selection, rename/comment/
+  prototype annotations (persisted per artifact in `localStorage`), callers/callees and a
+  clickable SVG call graph.
+- **Disassembly**: clickable addresses and call targets jump to the target function; annotated
+  names replace raw names; nearby function list.
+- **Editable hex viewer**: byte grid, click+type hex, Apply, highlight edited bytes, revert,
+  and `Export patched copy` (fetch `/artifact`, apply patches, download `.patched`).
+- Jump targets are shared between function list, call map and disassembly.
+
 ## Build & smoke test
 
 ```powershell

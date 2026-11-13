@@ -183,3 +183,18 @@ a { color: var(--accent); text-decoration: none; }
 .text-critical { color: var(--critical); }
 .text-high { color: var(--high); }
 .wrap { flex-wrap: wrap; }
+
+/* Ghidra/IDA-style analysis workspace */
+.link-button { background: none; border: 0; padding: 0; color: inherit; font: inherit; font-family: var(--mono); cursor: pointer; text-decoration: underline dotted rgba(139,150,165,.5); }
+.link-button:hover { color: var(--accent); }
+.text-accent { color: var(--accent); }
+.hex-branch td { background: rgba(76,194,255,.05); }
+.hex-grid { font-family: var(--mono); font-size: 12px; overflow: auto; max-height: 68vh; padding: 10px; }
+.hex-row { display: flex; gap: 10px; white-space: nowrap; line-height: 1.7; }
+.hex-address { color: var(--muted); width: 82px; flex: 0 0 82px; }
+.hex-cell-group { display: flex; gap: 2px; }
+.hex-byte { background: none; border: 0; color: var(--text); font-family: var(--mono); font-size: 12px; padding: 1px 2px; min-width: 20px; text-align: center; border-radius: 3px; cursor: pointer; }
+.hex-byte:hover { background: var(--panel-2); }
+.hex-byte.edited { color: var(--high); background: rgba(255,159,67,.14); font-weight: 700; }
+.hex-byte.selected { outline: 1px solid var(--accent); background: rgba(76,194,255,.18); }
+.hex-ascii { color: var(--muted); margin-left: 8px; white-space: pre; }

@@ -14,8 +14,10 @@ background thread inside the app process — no Node runtime and **no separate s
   hex slices, rizin disassembly, ILSpyCmd/Ghidra decompile jobs with SSE progress,
   engine list/install, report diff and APK/.NET/signature facts.
 - Screens: Home, Overview, Findings (with evidence), Evidence, Sections, Imports/Exports,
-  Strings, Hex, APK Manifest, .NET Metadata, Signatures, Disassembly, Decompile, Diff,
-  Engine packs, Settings.
+  Strings, **editable hex editor** (byte patches + patched-copy export), APK Manifest,
+  .NET Metadata, Signatures, **Functions & Map** (rename/comment/prototype annotations,
+  callers/callees, clickable SVG call graph), **Disassembly** with cross-reference jumps,
+  Decompile, Diff, Engine packs, Settings.
 - Static-only, read-only, evidence-first: the artifact is never executed.
 
 ## Prerequisites
@@ -52,6 +54,18 @@ which also holds seeded engine manifests and installed engines — no Program Fi
 
 Health, scans, decompile and engine install all flow through this embedded API. An external
 `avero serve` remains supported via Settings for browser/CLI development.
+
+## Analysis workspace (Ghidra/IDA-style)
+
+- `Functions & Map`: embedded core runs rizin `aaa` + `aflj`; the UI lists functions,
+  persists local annotations (name/comment/prototype) per artifact in `localStorage`,
+  shows callers/callees and an interactive SVG call graph (click a node to jump).
+- `Disassembly`: address/limit form, clickable function-start addresses and `call` targets;
+  annotated names are resolved in operands; nearby-function list for quick navigation.
+- `Hex editor`: click any byte, type a hex value and Apply; edited bytes are highlighted;
+  `Export patched copy` downloads `<artifact>.patched` (full artifact + local patches).
+- Core endpoints used: `/api/reports/{id}/functions`, `/api/reports/{id}/artifact`, plus the
+  existing disassembly/hex/report endpoints.
 
 ## Structure
 

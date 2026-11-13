@@ -3,7 +3,11 @@
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import * as api from "./api";
+import { DisassemblyWorkspace, FunctionsView, HexWorkspace } from "./analysis";
+import { loadAnnotations, saveAnnotations } from "./annotations";
 import type {
+  AnnotationMap,
+  FunctionInfo,
   DiffResult,
   EngineInfo,
   Evidence,
@@ -32,6 +36,7 @@ type Tab =
   | "manifest"
   | "dotnet"
   | "signatures"
+  | "functions"
   | "disassembly"
   | "decompile"
   | "diff"
@@ -1205,6 +1210,11 @@ export default function App() {
   const [apiError, setApiError] = useState<string | null>(null);
   const [report, setReport] = useState<Report | null>(null);
   const [artifactBytes, setArtifactBytes] = useState<Uint8Array | null>(null);
+  const [functions, setFunctions] = useState<FunctionInfo[]>([]);
+  const [functionsLoading, setFunctionsLoading] = useState(false);
+  const [functionsError, setFunctionsError] = useState<string | null>(null);
+  const [annotations, setAnnotations] = useState<AnnotationMap>({});
+  const [disasmAddress, setDisasmAddress] = useState<string>("");
   const [tab, setTab] = useState<Tab>("home");
   const [recent, setRecent] = useState<RecentReport[]>([]);
   const [error, setError] = useState<string | null>(null);
@@ -1262,6 +1272,41 @@ export default function App() {
 
   useEffect(() => () => unsubscribe.current?.(), []);
 
+  const loadFunctions = useCallback(async (reportId: string) => {
+    setFunctionsLoading(true);
+    setFunctionsError(null);
+    try {
+      setFunctions(await api.getFunctions(apiUrl, reportId));
+    } catch (error: unknown) {
+      setFunctions([]);
+      setFunctionsError(error instanceof Error ? error.message : "function analysis failed");
+    } finally {
+      setFunctionsLoading(false);
+    }
+  }, [apiUrl]);
+
+  useEffect(() => {
+    if (!report) return;
+    setAnnotations(loadAnnotations(report.artifact.id));
+    setDisasmAddress("");
+    setFunctions([]);
+    setFunctionsError(null);
+    if (mode === "API") void loadFunctions(report.artifact.id);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [report?.artifact.id, mode, loadFunctions]);
+
+  const annotateFunction = (address: number, patch: { name?: string; comment?: string; prototype?: string }) => {
+    if (!report) return;
+    const key = String(address);
+    const next: AnnotationMap = { ...annotations, [key]: { ...annotations[key], ...patch } };
+    setAnnotations(next);
+    saveAnnotations(report.artifact.id, next);
+  };
+
+  const jumpToFunction = (address: number) => {
+    setDisasmAddress(`0x${address.toString(16)}`);
+    setTab("disassembly");
+  };
   const adoptReport = (next: Report) => {
     setReport(next);
     saveReport(next);
@@ -1367,6 +1412,7 @@ export default function App() {
     { id: "manifest", label: "APK Manifest", show: isApk },
     { id: "dotnet", label: ".NET Metadata", show: isDotnet },
     { id: "signatures", label: "Signatures", show: isSignatures },
+    { id: "functions", label: "Functions & Map", show: mode === "API" },
     { id: "disassembly", label: "Disassembly", show: mode === "API" },
     { id: "decompile", label: "Decompile", show: mode === "API" },
     { id: "diff", label: "Diff", show: mode === "API" },
@@ -1451,9 +1497,10 @@ export default function App() {
           {report && tab === "sections" && <SectionsView report={report} />}
           {report && tab === "imports" && <ImportsView report={report} />}
           {report && tab === "strings" && <StringsView report={report} mode={mode} apiUrl={apiUrl} />}
-          {report && tab === "hex" && <HexView key={report.artifact.id} report={report} bytes={artifactBytes} mode={mode} apiUrl={apiUrl} onBytes={setArtifactBytes} />}
+          {report && tab === "hex" && <HexWorkspace key={report.artifact.id} report={report} mode={mode} apiUrl={apiUrl} bytes={artifactBytes} onBytes={setArtifactBytes} />}
           {report && (tab === "manifest" || tab === "dotnet" || tab === "signatures") && <FactsView report={report} mode={mode} />}
-          {report && tab === "disassembly" && mode === "API" && <DisassemblyView report={report} apiUrl={apiUrl} />}
+          {report && tab === "functions" && mode === "API" && (<FunctionsView report={report} mode={mode} functions={functions} loading={functionsLoading} error={functionsError} annotations={annotations} onAnnotate={annotateFunction} onJump={jumpToFunction} onRefresh={() => void loadFunctions(report.artifact.id)} />)}
+          {report && tab === "disassembly" && mode === "API" && (<DisassemblyWorkspace report={report} apiUrl={apiUrl} annotations={annotations} functions={functions} initialAddress={disasmAddress} onJump={jumpToFunction} />)}
           {report && tab === "decompile" && mode === "API" && <DecompileView key={report.artifact.id} report={report} apiUrl={apiUrl} />}
           {report && tab === "diff" && mode === "API" && <DiffView key={report.artifact.id} report={report} apiUrl={apiUrl} />}
           {tab === "engines" && <EnginesView apiUrl={apiUrl} health={health} />}

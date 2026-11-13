@@ -416,6 +416,48 @@ fn parse_address(raw: &str) -> Option<u64> {
     }
 }
 
+fn handle_functions(state: &AppState, request: &HttpRequest, report_id: &str) -> ApiResult {
+    let Some(artifact_path) = artifact_path_of(state, report_id) else {
+        return not_found("report not found");
+    };
+    if disasm::locate_rizin().is_none() {
+        return ApiResult::Json(
+            409,
+            error_json(
+                "engine_missing",
+                "rizin is not installed; run `avero engine install rizin`",
+            ),
+        );
+    }
+    let _ = request;
+    match disasm::list_functions(&artifact_path) {
+        Ok(functions) => ApiResult::Json(
+            200,
+            json!({
+                "items": functions,
+                "total": functions.len(),
+            }),
+        ),
+        Err(error) => ApiResult::Json(500, error_json("functions_failed", &error.to_string())),
+    }
+}
+
+fn handle_artifact(state: &AppState, report_id: &str) -> ApiResult {
+    let Some(artifact_path) = artifact_path_of(state, report_id) else {
+        return not_found("report not found");
+    };
+    match std::fs::read(&artifact_path) {
+        Ok(bytes) => ApiResult::Bytes(200, "application/octet-stream", bytes),
+        Err(_) => ApiResult::Json(
+            410,
+            error_json(
+                "artifact_unavailable",
+                "artifact bytes are no longer available",
+            ),
+        ),
+    }
+}
+
 fn handle_disassembly(state: &AppState, request: &HttpRequest, report_id: &str) -> ApiResult {
     let Some(artifact_path) = artifact_path_of(state, report_id) else {
         return not_found("report not found");
@@ -1067,6 +1109,10 @@ pub fn handle_request(state: &Arc<AppState>, request: &HttpRequest) -> ApiResult
             ["api", "reports", report_id, "hex"] => handle_hex(state, request, report_id),
             ["api", "reports", report_id, "apk-manifest"] => handle_apk_manifest(state, report_id),
             ["api", "reports", report_id, "dotnet"] => handle_dotnet(state, report_id),
+            ["api", "reports", report_id, "functions"] => {
+                handle_functions(state, request, report_id)
+            }
+            ["api", "reports", report_id, "artifact"] => handle_artifact(state, report_id),
             ["api", "reports", report_id, "disassembly"] => {
                 handle_disassembly(state, request, report_id)
             }

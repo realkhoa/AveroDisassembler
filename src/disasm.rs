@@ -1,4 +1,4 @@
-﻿//! rizin disassembly adapter (`avero disasm`).
+//! rizin disassembly adapter (`avero disasm`).
 //!
 //! Uses the installed rizin sidecar (LGPL-3.0, never linked) in JSON mode:
 //! `rizin -q -c "s <addr>" -c "pdj <count>" <file>`.
@@ -129,7 +129,7 @@ pub fn disassemble_file(path: &Path, options: &DisasmOptions) -> Result<Disassem
     command.arg("-q");
     command.arg("-c").arg("e scr.color=0");
     if options.analyze {
-        command.arg("-c").arg("aa");
+        command.arg("-c").arg("aaa");
     }
     command.arg("-c").arg(format!("s {address}"));
     command.arg("-c").arg(format!("pdj {count}"));
@@ -175,8 +175,123 @@ mod tests {
     }
 
     #[test]
+    fn parses_aflj_functions() {
+        let json = r#"[{"offset":4096,"name":"entry0","size":42,"signature":"entry0();","callrefs":[{"from":4100,"to":8192,"type":"CALL"},{"from":4104,"to":8196,"type":"CODE"}]}]"#;
+        let functions = parse_functions_json(json).expect("parse functions");
+        assert_eq!(functions.len(), 1);
+        assert_eq!(functions[0].address, 4096);
+        assert_eq!(functions[0].name, "entry0");
+        assert_eq!(functions[0].size, 42);
+        assert_eq!(functions[0].callrefs.len(), 2);
+        assert_eq!(functions[0].callrefs[0].kind, "CALL");
+    }
+
+    #[test]
     fn rejects_non_array_output() {
         assert!(parse_pdj_json("{\"error\":true}").is_err());
         assert!(parse_pdj_json("not json").is_err());
     }
+}
+
+/// A function plus a bounded set of call-graph references, as reported by rizin `aflj`.
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize, PartialEq, Eq)]
+pub struct CallRef {
+    pub from: u64,
+    pub to: u64,
+    #[serde(default)]
+    pub kind: String,
+}
+
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize, PartialEq, Eq)]
+pub struct FunctionInfo {
+    pub address: u64,
+    pub name: String,
+    pub size: u64,
+    #[serde(default)]
+    pub signature: Option<String>,
+    #[serde(default)]
+    pub callrefs: Vec<CallRef>,
+}
+
+/// Parse rizin `aflj` JSON into function records (bounded callrefs).
+pub fn parse_functions_json(raw: &str) -> Result<Vec<FunctionInfo>> {
+    let value: Value =
+        serde_json::from_str(raw).with_context(|| "cannot parse rizin `aflj` JSON output")?;
+    let array = value
+        .as_array()
+        .ok_or_else(|| anyhow!("rizin `aflj` output is not a JSON array"))?;
+    let mut functions = Vec::new();
+    for entry in array.iter().take(5000) {
+        let Some(address) = entry.get("offset").and_then(Value::as_u64) else {
+            continue;
+        };
+        let name = entry
+            .get("name")
+            .and_then(Value::as_str)
+            .unwrap_or("")
+            .to_string();
+        let size = entry.get("size").and_then(Value::as_u64).unwrap_or(0);
+        let signature = entry
+            .get("signature")
+            .and_then(Value::as_str)
+            .map(str::to_string);
+        let callrefs = entry
+            .get("callrefs")
+            .and_then(Value::as_array)
+            .map(|refs| {
+                refs.iter()
+                    .take(256)
+                    .filter_map(|reference| {
+                        Some(CallRef {
+                            from: reference.get("from").and_then(Value::as_u64)?,
+                            to: reference.get("to").and_then(Value::as_u64)?,
+                            kind: reference
+                                .get("type")
+                                .and_then(Value::as_str)
+                                .unwrap_or("")
+                                .to_string(),
+                        })
+                    })
+                    .collect()
+            })
+            .unwrap_or_default();
+        functions.push(FunctionInfo {
+            address,
+            name,
+            size,
+            signature,
+            callrefs,
+        });
+    }
+    Ok(functions)
+}
+
+/// List functions with call references via rizin analysis (`aa` + `aflj`).
+pub fn list_functions(path: &Path) -> Result<Vec<FunctionInfo>> {
+    let rizin = locate_rizin().ok_or_else(|| {
+        anyhow!("rizin is not installed. Run `avero engine install rizin` (or `avero engine pin rizin` first).")
+    })?;
+    if !path.is_file() {
+        return Err(anyhow!("input not found: {}", path.display()));
+    }
+    let output = crate::util::command(&rizin)
+        .arg("-q")
+        .arg("-c")
+        .arg("e scr.color=0")
+        .arg("-c")
+        .arg("aaa")
+        .arg("-c")
+        .arg("aflj")
+        .arg(path)
+        .output()
+        .with_context(|| format!("cannot launch rizin at {}", rizin.display()))?;
+    if !output.status.success() {
+        let stderr = String::from_utf8_lossy(&output.stderr);
+        return Err(anyhow!(
+            "rizin exited with {}: {}",
+            output.status,
+            stderr.chars().take(800).collect::<String>()
+        ));
+    }
+    parse_functions_json(&String::from_utf8_lossy(&output.stdout))
 }

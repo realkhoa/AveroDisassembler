@@ -1,6 +1,7 @@
 /** Local `avero serve` API client (`avero.api/v1`) for the desktop workbench. */
 
 import type {
+  FunctionInfo,
   DiffResult,
   EngineInfo,
   Health,
@@ -163,4 +164,20 @@ export function apkManifest(base: string, reportId: string): Promise<Record<stri
 
 export function dotnet(base: string, reportId: string): Promise<Record<string, unknown>> {
   return request(base, `/api/reports/${reportId}/dotnet`);
+}
+
+export async function getFunctions(base: string, reportId: string): Promise<FunctionInfo[]> {
+  const response = await request<{ items: FunctionInfo[] }>(
+    base,
+    `/api/reports/${reportId}/functions`,
+  );
+  return response.items;
+}
+
+export async function getArtifactBytes(base: string, reportId: string): Promise<Uint8Array> {
+  const response = await fetch(`${base.replace(/\/+$/, "")}/api/reports/${reportId}/artifact`);
+  if (!response.ok) {
+    throw new Error(`artifact download failed (${response.status} ${response.statusText})`);
+  }
+  return new Uint8Array(await response.arrayBuffer());
 }

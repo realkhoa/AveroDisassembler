@@ -1,13 +1,13 @@
-# Implementation status — v0.15.0 (native Rust core + web workbench + self-contained Tauri desktop app)
+# Implementation status — v0.16.0 (native Rust core + web workbench + Ghidra/IDA-style Tauri workspace)
 
 | | |
 |---|---|
 | **Date** | 2026-11-12 |
-| **Version** | 0.15.0 (Rust core + desktop) |
+| **Version** | 0.16.0 (Rust core + desktop) |
 | **Toolchain** | rustc 1.94.1 MSVC, VS 18 Community, Windows 11 26200 |
 | **Binary** | `target/release/avero.exe` — **4.12 MB**, no runtime dependency |
 | **Tests** | **74 passing** (54 unit + 7 CLI + 4 format + 4 analyzer + 5 APK manifest) |
-| **UI** | **Web (M1–M4) in `apps/web`** — Next.js 15 + React 19, 22 Vitest + 11 Playwright E2E, axe-clean. **Desktop (Tauri 2) in `apps/desktop`** — Vite + React, file/API modes, scan SSE, decompile, disassembly, engines, diff; Windows exe verified. See [HANDOVER-UI.md](HANDOVER-UI.md), [HANDOVER-DESKTOP.md](HANDOVER-DESKTOP.md). |
+| **UI** | **Web (M1–M4) in `apps/web`** — Next.js 15 + React 19, 22 Vitest + 11 Playwright E2E, axe-clean. **Desktop (Tauri 2) in `apps/desktop`** — embedded core (no server), file/API modes, scan SSE, editable hex + patched export, function explorer with rename/comment annotations, call graph map, cross-reference disassembly jumps, decompile, engines, diff; Windows exe verified. See [HANDOVER-UI.md](HANDOVER-UI.md), [HANDOVER-DESKTOP.md](HANDOVER-DESKTOP.md). |
 | **Related docs** | [Design](AVERO-DISASSEMBLER-DESIGN.md) · [Research](RE-RESEARCH-REPORT.md) · [Signatures](SIGNATURES.md) · [Engines](ENGINES.md) |
 
 ---
